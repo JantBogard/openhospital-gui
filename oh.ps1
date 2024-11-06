@@ -175,7 +175,7 @@ $script:OH_SETTINGS="settings.properties"
 $script:DATABASE_SETTINGS="database.properties"
 $script:EXAMINATION_SETTINGS="examination.properties"
 $script:IMAGING_SETTINGS="dicom.properties"
-$script:LOG4J_SETTINGS="log4j.properties"
+$script:LOG4J_SETTINGS="log4j2-spring.properties"
 $script:PRINTER_SETTINGS="txtPrinter.properties"
 $script:SMS_SETTINGS="sms.properties"
 $script:TELEMETRY_SETTINGS="telemetry.properties"
@@ -984,8 +984,11 @@ function write_api_config_file {
 		# generate OH API token and save to settings file
 		$JWT_TOKEN_SECRET=( -join ($(for($i=0; $i -lt 64; $i++) { ((65..90)+(97..122)+(".")+("!")+("?")+("&") | Get-Random | % {[char]$_}) })) )
 		Write-Host "Writing OH API configuration file -> $API_SETTINGS..."
-		(Get-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS.dist").replace("JWT_TOKEN_SECRET","$JWT_TOKEN_SECRET") | Set-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS"
-		(Get-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS").replace("OH_API_PID","$OH_API_PID") | Set-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS"
+		(Get-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS.dist") `
+            -replace "JWT_TOKEN_SECRET", "$JWT_TOKEN_SECRET" `
+            -replace "OH_API_PID", "$OH_API_PID" `
+            -replace "API_HOST:API_PORT", "localhost:8080" `
+            | Set-Content "$OH_PATH/$OH_DIR/rsc/$API_SETTINGS"
 	}
 }
 
@@ -1039,7 +1042,7 @@ function write_config_files {
 		(Get-Content "$OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS").replace("DBNAME","$DATABASE_NAME") | Set-Content "$OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS"
 
 		# direct creation of $DATABASE_SETTINGS - deprecated
-		#Set-Content -Path $OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS -Value "jdbc.url=jdbc:mysql://"$DATABASE_SERVER":$DATABASE_PORT/$DATABASE_NAME"
+		#Set-Content -Path $OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS -Value "jdbc.url=jdbc:mariadb://"$DATABASE_SERVER":$DATABASE_PORT/$DATABASE_NAME"
 		#Add-Content -Path $OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS -Value "jdbc.username=$DATABASE_USER"
 		#Add-Content -Path $OH_PATH/$OH_DIR/rsc/$DATABASE_SETTINGS -Value "jdbc.password=$DATABASE_PASSWORD"
 	}
@@ -1133,10 +1136,10 @@ function start_gui {
 	# OH GUI launch
 	cd "$OH_PATH\$OH_DIR" # workaround for hard coded paths
 
-	#$JAVA_ARGS="-client -Dlog4j.configuration=`"`'$OH_PATH\$OH_DIR\rsc\$LOG4J_SETTINGS`'`" -Dsun.java2d.dpiaware=false -Djava.library.path=`"`'$NATIVE_LIB_PATH`'`" -cp `"`'$OH_CLASSPATH`'`" org.isf.menu.gui.Menu"
+	#$JAVA_ARGS="-client -Dlog4j.configuration=`"`'$OH_PATH\$OH_DIR\rsc\$LOG4J_SETTINGS`'`" -Dsun.java2d.dpiaware=false -Djava.library.path=`"`'$NATIVE_LIB_PATH`'`" -cp `"`'$OH_CLASSPATH`'`" org.isf.Application"
 
 	# log4j configuration is now read directly
-$JAVA_ARGS="-client -Xms64m -Xmx1024m -Dsun.java2d.dpiaware=false -Djava.library.path=`"$NATIVE_LIB_PATH`" -cp `"`'$OH_CLASSPATH`'`" org.isf.menu.gui.Menu"
+$JAVA_ARGS="-client -Xms64m -Xmx1024m -Dsun.java2d.dpiaware=false -Djava.library.path=`"$NATIVE_LIB_PATH`" -cp `"`'$OH_CLASSPATH`'`" org.isf.Application"
 
 	Start-Process -FilePath "$JAVA_BIN" -ArgumentList $JAVA_ARGS -Wait -NoNewWindow -RedirectStandardOutput "$LOG_DIR/$LOG_FILE" -RedirectStandardError "$LOG_DIR/$LOG_FILE_ERR"
 	

@@ -116,7 +116,7 @@ OH_SETTINGS="settings.properties"
 DATABASE_SETTINGS="database.properties"
 EXAMINATION_SETTINGS="examination.properties"
 IMAGING_SETTINGS="dicom.properties"
-LOG4J_SETTINGS="log4j.properties"
+LOG4J_SETTINGS="log4j2-spring.properties"
 PRINTER_SETTINGS="txtPrinter.properties"
 SMS_SETTINGS="sms.properties"
 TELEMETRY_SETTINGS="telemetry.properties"
@@ -876,7 +876,10 @@ function write_api_config_file {
 		# JWT_TOKEN_SECRET=`openssl rand -base64 64 | xargs`
 		JWT_TOKEN_SECRET=`LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 66`
 		echo "Writing OH API configuration file -> $API_SETTINGS..."
-		sed -e "s/JWT_TOKEN_SECRET/"$JWT_TOKEN_SECRET"/g" -e "s&OH_API_PID&"$OH_API_PID"&g" ./$OH_DIR/rsc/$API_SETTINGS.dist > ./$OH_DIR/rsc/$API_SETTINGS
+		sed -e "s/JWT_TOKEN_SECRET/"$JWT_TOKEN_SECRET"/g" \
+		    -e "s&OH_API_PID&"$OH_API_PID"&g" \
+		    -e "s/API_HOST:API_PORT/localhost:8080/g" \
+		    ./$OH_DIR/rsc/$API_SETTINGS.dist > ./$OH_DIR/rsc/$API_SETTINGS
 	fi
 }
 
@@ -998,7 +1001,7 @@ function start_gui {
 	# OH GUI launch
 	cd "$OH_PATH/$OH_DIR" # workaround for hard coded paths
 
-	$JAVA_BIN -client -Xms64m -Xmx1024m -Dsun.java2d.dpiaware=false -Djava.library.path=${NATIVE_LIB_PATH} -classpath $OH_CLASSPATH org.isf.menu.gui.Menu >> ../$LOG_DIR/$LOG_FILE 2>&1
+	$JAVA_BIN -client -Xms64m -Xmx1024m -Dsun.java2d.dpiaware=false -Djava.library.path=${NATIVE_LIB_PATH} -classpath $OH_CLASSPATH org.isf.Application >> ../$LOG_DIR/$LOG_FILE 2>&1
 
 	if [ $? -ne 0 ]; then
 		echo "An error occurred while starting Open Hospital. Exiting."
