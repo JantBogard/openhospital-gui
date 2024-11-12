@@ -22,5 +22,5 @@
 package org.isf.utils.jobjects;
 
 public enum InventoryStatus {
-    draft, validated, canceled;
+    draft, validated, canceled, done;
 }
