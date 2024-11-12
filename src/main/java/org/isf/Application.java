@@ -1,6 +1,6 @@
 /*
  * Open Hospital (www.open-hospital.org)
- * Copyright © 2006-2023 Informatici Senza Frontiere (info@informaticisenzafrontiere.org)
+ * Copyright © 2006-2024 Informatici Senza Frontiere (info@informaticisenzafrontiere.org)
  *
  * Open Hospital is a free and open source software for healthcare data management.
  *
@@ -19,22 +19,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package org.isf.session;
+package org.isf;
 
-import java.awt.AWTEvent;
+import org.isf.menu.gui.Menu;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import org.isf.menu.gui.Login.LoginListener;
-import org.isf.menu.model.User;
+@SpringBootApplication
+public class Application {
 
-public class LoginEventListener implements LoginListener {
-
-	@Override
-	public void loginInserted(AWTEvent e) {
-		if (e.getSource() instanceof User myUser) {
-			RestartUserSession.setUser(myUser);
-			RestartUserSession.getTimer().startTimer();
-		}
-
+	public static void main(String... args) {
+		new Menu(args);
 	}
-
 }
