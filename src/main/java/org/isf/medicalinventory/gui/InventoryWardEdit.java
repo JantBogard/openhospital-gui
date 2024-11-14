@@ -827,7 +827,7 @@ public class InventoryWardEdit extends ModalJFrame {
         deleteButton.addActionListener(actionEvent -> {
             int[] selectedRows = jTableInventoryRow.getSelectedRows();
             if (selectedRows.length == 0) {
-                MessageDialog.error(this, "angal.inventoryrow.pleaseselectatleastoneinventoryrow.msg");
+                MessageDialog.error(this, "angal.inventory.pleaseselectatleastoneinventoryrow.msg");
                 return;
             }
             int delete = MessageDialog.yesNo(null, "angal.inventory.doyoureallywanttodeletethisinventoryrow.msg");
