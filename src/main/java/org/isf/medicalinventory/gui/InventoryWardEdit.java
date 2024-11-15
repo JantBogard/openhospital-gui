@@ -26,7 +26,6 @@ import static org.isf.utils.Constants.DATE_TIME_FORMATTER;
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -932,7 +931,7 @@ public class InventoryWardEdit extends ModalJFrame {
             jTableInventoryRow.setFillsViewportHeight(true);
             jTableInventoryRow.setModel(new InventoryRowModel());
             for (int i = 0; i < pColumnVisible.length; i++) {
-                jTableInventoryRow.getColumnModel().getColumn(i).setCellRenderer(new EnabledTableCellRenderer());
+                jTableInventoryRow.getColumnModel().getColumn(i).setCellRenderer(new DefaultTableCellRenderer());
                 jTableInventoryRow.getColumnModel().getColumn(i).setPreferredWidth(pColumwidth[i]);
                 if (i == 0 || !pColumnVisible[i]) {
                     jTableInventoryRow.getColumnModel().getColumn(i).setMinWidth(0);
@@ -957,16 +956,6 @@ public class InventoryWardEdit extends ModalJFrame {
             jTableInventoryRow.setDefaultEditor(Integer.class, cellEditor);
         }
         return jTableInventoryRow;
-    }
-
-    static class EnabledTableCellRenderer extends DefaultTableCellRenderer {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-                int row, int column) {
-            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        }
     }
 
     class InventoryRowModel extends DefaultTableModel {
