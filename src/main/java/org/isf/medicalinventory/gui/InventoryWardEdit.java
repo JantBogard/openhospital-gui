@@ -61,6 +61,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.EventListenerList;
@@ -201,12 +202,12 @@ public class InventoryWardEdit extends ModalJFrame {
     private JComboBox<Ward> destinationComboBox;
     private Ward wardSelected;
     private JLabel loaderLabel;
-    private boolean selectAll = false;
-    private String newReference = null;
-    private MovementType chargeType = null;
-    private MovementType dischargeType = null;
-    private Supplier supplier = null;
-    private Ward destination = null;
+    private boolean selectAll;
+    private String newReference;
+    private MovementType chargeType;
+    private MovementType dischargeType;
+    private Supplier supplier;
+    private Ward destination;
     private WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
     private MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext()
             .getBean(MedicalInventoryManager.class);
@@ -494,7 +495,7 @@ public class InventoryWardEdit extends ModalJFrame {
 	            dischargeType = (MovementType) dischargeComboBox.getSelectedItem();
 	            supplier = (Supplier) supplierComboBox.getSelectedItem();
 	            destination = (Ward) destinationComboBox.getSelectedItem();
-                if ((inventory == null) && (mode.equals("new"))) {
+                if (inventory == null && mode.equals("new")) {
                     newReference = referenceTextField.getText().trim();
                     boolean refExist;
                     refExist = medicalInventoryManager.referenceExists(newReference);
@@ -551,7 +552,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     if (info != JOptionPane.YES_OPTION) {
                         dispose();
                     }
-                } else if ((inventory != null) && (mode.equals("update"))) {
+                } else if (inventory != null && mode.equals("update")) {
                     String lastCharge = inventory.getChargeType();
                     String lastDischarge = inventory.getDischargeType();
                     Integer lastSupplier = inventory.getSupplier();
@@ -783,11 +784,9 @@ public class InventoryWardEdit extends ModalJFrame {
                         statusLabel.setForeground(Color.BLUE);
                     } else {
                         MessageDialog.info(null, "angal.inventory.validate.error.msg");
-                        return;
                     }
                 } catch (OHServiceException e) {
                     OHServiceExceptionUtil.showMessages(e);
-                    return;
                 }
 			}
         });
@@ -857,8 +856,6 @@ public class InventoryWardEdit extends ModalJFrame {
                 }
                 jTableInventoryRow.clearSelection();
                 adjustWidth();
-            } else {
-                return;
             }
         });
         return deleteButton;
@@ -907,7 +904,6 @@ public class InventoryWardEdit extends ModalJFrame {
                     dispose();
                 } else {
                     resetVariable();
-                    return;
                 }
             } else {
                 resetVariable();
@@ -945,7 +941,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 }
             }
             DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+            centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
             jTableInventoryRow.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
             jTableInventoryRow.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
@@ -1118,9 +1114,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     }
                     inventoryRowListAdded.add(invRow);
                     inventoryRowSearchList.set(r, invRow);
-                    SwingUtilities.invokeLater(() -> {
-                        jTableInventoryRow.updateUI();
-                    });
+                    SwingUtilities.invokeLater(() -> jTableInventoryRow.updateUI());
                 }
             }
         }
@@ -1155,7 +1149,7 @@ public class InventoryWardEdit extends ModalJFrame {
             }
         }
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         jTableInventoryRow.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
     }
 
@@ -1179,7 +1173,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 medicalWard.getMedical(), medicalWard.getLot())));
         for (MedicalWard medicalWard : medicalWardList) {
             lots = movStockInsertingManager.getLotByMedical(medicalWard.getMedical(), false);
-            double actualQty = medicalWard.getMedical().getInitialqty() + medicalWard.getMedical().getInqty() - medicalWard.getMedical().getOutqty();
+            double actualQty = medicalWard.getMedical().getInqty() - medicalWard.getMedical().getOutqty();
             if (lots.isEmpty()) {
                 inventoryRowTemp = new MedicalInventoryRow(0, actualQty, actualQty, null, medicalWard.getMedical(), null);
                 if (!existInInventorySearchList(inventoryRowTemp)) {
@@ -1303,7 +1297,7 @@ public class InventoryWardEdit extends ModalJFrame {
             TextPrompt suggestion = new TextPrompt(MessageBundle.getMessage("angal.common.code.txt"), codeTextField, Show.FOCUS_LOST);
             suggestion.setFont(new Font("Tahoma", Font.PLAIN, 12));
             suggestion.setForeground(Color.GRAY);
-            suggestion.setHorizontalAlignment(JLabel.CENTER);
+            suggestion.setHorizontalAlignment(SwingConstants.CENTER);
             suggestion.changeAlpha(0.5f);
             suggestion.changeStyle(Font.BOLD + Font.ITALIC);
             codeTextField.addKeyListener(new KeyAdapter() {
@@ -1330,7 +1324,7 @@ public class InventoryWardEdit extends ModalJFrame {
 
     private void addInventoryRow(String code) throws OHServiceException {
         List<MedicalInventoryRow> inventoryRowsList;
-        List<MedicalWard> medicalWardList = new ArrayList<MedicalWard>();
+        List<MedicalWard> medicalWardList = new ArrayList<>();
         Medical medical;
         if (wardId.isEmpty()) {
             wardId = ((Ward) Objects.requireNonNull(wardComboBox.getSelectedItem())).getCode();
@@ -1565,9 +1559,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 chargeComboBox.setSelectedItem(movementSelected);
                 chargeType = movementSelected;
             }
-            chargeComboBox.addActionListener(actionEvent -> {
-                chargeType = (MovementType) chargeComboBox.getSelectedItem();
-            });
+            chargeComboBox.addActionListener(actionEvent -> chargeType = (MovementType) chargeComboBox.getSelectedItem());
         }
         return chargeComboBox;
     }
@@ -1594,9 +1586,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 dischargeComboBox.setSelectedItem(movementSelected);
                 dischargeType = movementSelected;
             }
-            dischargeComboBox.addActionListener(actionEvent -> {
-                dischargeType = (MovementType) dischargeComboBox.getSelectedItem();
-            });
+            dischargeComboBox.addActionListener(actionEvent -> dischargeType = (MovementType) dischargeComboBox.getSelectedItem());
         }
         return dischargeComboBox;
     }
@@ -1621,9 +1611,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 supplierComboBox.setSelectedItem(supplierSelected);
                 supplier = supplierSelected;
             }
-            supplierComboBox.addActionListener(actionEvent -> {
-                supplier = (Supplier) supplierComboBox.getSelectedItem();
-            });
+            supplierComboBox.addActionListener(actionEvent -> supplier = (Supplier) supplierComboBox.getSelectedItem());
         }
         return supplierComboBox;
     }
@@ -1648,9 +1636,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 destinationComboBox.setSelectedItem(destinationSelected);
                 destination = destinationSelected;
             }
-            destinationComboBox.addActionListener(actionEvent -> {
-                destination = (Ward) destinationComboBox.getSelectedItem();
-            });
+            destinationComboBox.addActionListener(actionEvent -> destination = (Ward) destinationComboBox.getSelectedItem());
         }
         return destinationComboBox;
     }

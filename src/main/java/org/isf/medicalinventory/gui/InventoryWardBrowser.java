@@ -30,7 +30,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -49,8 +48,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import org.isf.generaldata.MessageBundle;
@@ -102,10 +99,10 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JLabel statusLabel;
     JButton next;
     JButton previous;
-    JComboBox pagesCombo = new JComboBox();
-    JLabel under = new JLabel("/ 0 Page");
+    JComboBox<Integer> pagesCombo = new JComboBox<>();
+    JLabel under = new JLabel("/ 0 " + MessageBundle.getMessage("angal.inventory.page.text"));
     private static int PAGE_SIZE = 50;
-    private int startIndex = 0;
+    private int startIndex;
     private int totalRows;
     private MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
     private WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
@@ -147,7 +144,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 			}
 			startIndex += PAGE_SIZE;
 			jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
-			if ((startIndex + PAGE_SIZE) > totalRows) {
+			if (startIndex + PAGE_SIZE > totalRows) {
 				next.setEnabled(false);
 			}
 			pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
@@ -164,22 +161,19 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 		    }
 		    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
 	    });
-	    pagesCombo.addItemListener(new ItemListener() {
+	    pagesCombo.addItemListener(itemEvent -> {
+		    int eventID = itemEvent.getStateChange();
 
-		    public void itemStateChanged(ItemEvent itemEvent) {
-			    int eventID = itemEvent.getStateChange();
+		    if (eventID == ItemEvent.SELECTED) {
+			    int page_number = (Integer) pagesCombo.getSelectedItem();
+			    startIndex = (page_number - 1) * PAGE_SIZE;
 
-			    if (eventID == ItemEvent.SELECTED) {
-				    int page_number = (Integer) pagesCombo.getSelectedItem();
-				    startIndex = (page_number - 1) * PAGE_SIZE;
+			    next.setEnabled(startIndex + PAGE_SIZE <= totalRows);
+			    previous.setEnabled(page_number != 1);
+			    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+			    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
 
-				    next.setEnabled((startIndex + PAGE_SIZE) <= totalRows);
-				    previous.setEnabled(page_number != 1);
-				    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
-				    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
-
-				    pagesCombo.setEnabled(true);
-			    }
+			    pagesCombo.setEnabled(true);
 		    }
 	    });
     }
@@ -440,21 +434,17 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             jTableInventory = new JTable();
             jTableInventory.setFillsViewportHeight(true);
             jTableInventory.setModel(new InventoryBrowsingModel());
-			jTableInventory.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					if (e.getValueIsAdjusting()) {
-						int[] selectedRows = jTableInventory.getSelectedRows();
-						if (selectedRows.length == 1) {
-							updateButton.setEnabled(true);
-							viewButton.setEnabled(true);
-							deleteButton.setEnabled(true);
-						} else {
-							updateButton.setEnabled(false);
-							viewButton.setEnabled(false);
-							deleteButton.setEnabled(false);
-						}
+			jTableInventory.getSelectionModel().addListSelectionListener(e -> {
+				if (e.getValueIsAdjusting()) {
+					int[] selectedRows = jTableInventory.getSelectedRows();
+					if (selectedRows.length == 1) {
+						updateButton.setEnabled(true);
+						viewButton.setEnabled(true);
+						deleteButton.setEnabled(true);
+					} else {
+						updateButton.setEnabled(false);
+						viewButton.setEnabled(false);
+						deleteButton.setEnabled(false);
 					}
 				}
 			});
@@ -493,6 +483,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 		    }
 	    }
 
+		@Override
         public Class<?> getColumnClass(int c) {
             if (c == 0) {
                 return String.class;
@@ -508,6 +499,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             return null;
         }
 
+		@Override
 	    public int getRowCount() {
 		    if (inventoryList == null) {
 			    return 0;
@@ -523,6 +515,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             return pColums.length;
         }
 
+		@Override
         public Object getValueAt(int r, int c) {
             MedicalInventory medInvt = inventoryList.get(r);
 
@@ -557,7 +550,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
     private JComboBox<String> getComboBox() {
         if (statusComboBox == null) {
-            statusComboBox = new JComboBox<String>();
+            statusComboBox = new JComboBox<>();
             statusComboBox.addItem("");
             for (InventoryStatus currentStatus : InventoryStatus.values()) {
                 statusComboBox.addItem(MessageBundle.getMessage("angal.inventory." + currentStatus));
@@ -599,9 +592,9 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 		}
 		if (j * PAGE_SIZE < total_rows) {
 			pagesCombo.addItem(j + 1);
-			under.setText("/" + (total_rows / PAGE_SIZE + 1 + " Pages"));
+			under.setText("/" + (total_rows / PAGE_SIZE + 1 + " " + MessageBundle.getMessage("angal.inventory.pages.text")));
 		} else {
-			under.setText("/" + total_rows / PAGE_SIZE + " Pages");
+			under.setText("/" + total_rows / PAGE_SIZE + " " + MessageBundle.getMessage("angal.inventory.pages.text"));
 		}
 	}
 
