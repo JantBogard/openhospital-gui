@@ -1006,6 +1006,7 @@ public class InventoryWardEdit extends ModalJFrame {
             }
         }
 
+        @Override
         public Class<?> getColumnClass(int c) {
             if (c == 0) {
                 return Integer.class;
@@ -1029,6 +1030,7 @@ public class InventoryWardEdit extends ModalJFrame {
             return null;
         }
 
+        @Override
         public int getRowCount() {
             if (inventoryRowSearchList == null) {
                 return 0;
@@ -1036,14 +1038,17 @@ public class InventoryWardEdit extends ModalJFrame {
             return inventoryRowSearchList.size();
         }
 
+        @Override
         public String getColumnName(int c) {
             return pColums[c];
         }
 
+        @Override
         public int getColumnCount() {
             return pColums.length;
         }
 
+        @Override
         public Object getValueAt(int r, int c) {
             if (r < inventoryRowSearchList.size()) {
                 MedicalInventoryRow medInvtRow = inventoryRowSearchList.get(r);
