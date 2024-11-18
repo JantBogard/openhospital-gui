@@ -86,6 +86,8 @@ import org.isf.medstockmovtype.manager.MedicalDsrStockMovementTypeBrowserManager
 import org.isf.medstockmovtype.model.MovementType;
 import org.isf.menu.manager.Context;
 import org.isf.menu.manager.UserBrowsingManager;
+import org.isf.stat.gui.report.GenericReportPharmaceuticalInventory;
+import org.isf.stat.manager.JasperReportsManager;
 import org.isf.supplier.manager.SupplierBrowserManager;
 import org.isf.supplier.model.Supplier;
 import org.isf.utils.db.NormalizeString;
@@ -221,6 +223,7 @@ public class InventoryWardEdit extends ModalJFrame {
     private MedicalDsrStockMovementTypeBrowserManager medStockMovTypeManager = Context.getApplicationContext()
             .getBean(MedicalDsrStockMovementTypeBrowserManager.class);
     private SupplierBrowserManager supplierBrowserManager = Context.getApplicationContext().getBean(SupplierBrowserManager.class);
+    private JasperReportsManager jasperReportsManager = Context.getApplicationContext().getBean(JasperReportsManager.class);
 
 
     public InventoryWardEdit() {
@@ -863,6 +866,16 @@ public class InventoryWardEdit extends ModalJFrame {
     private JButton getPrintButton() {
         printButton = new JButton(MessageBundle.getMessage("angal.common.print.btn"));
         printButton.setMnemonic(MessageBundle.getMnemonic("angal.common.print.btn.key"));
+        printButton.setEnabled(true);
+
+        printButton.addActionListener(e -> {
+            int printRealQty = 0;
+            int response = MessageDialog.yesNo(this, "angal.inventory.askforrealquantityempty.msg");
+            if (response == JOptionPane.YES_OPTION) {
+                printRealQty = 1;
+            }
+            new GenericReportPharmaceuticalInventory(inventory, "InventoryWard", printRealQty);
+        });
         return printButton;
     }
 
