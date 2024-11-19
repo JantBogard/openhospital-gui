@@ -82,7 +82,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JPanel panelContent;
     private JButton closeButton;
     private JButton newButton;
-    private JButton updateButton;
+    private JButton editButton;
     private JButton deleteButton;
     private JButton viewButton;
     private JScrollPane scrollPaneInventory;
@@ -260,7 +260,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
             panelFooter.add(getNewButton());
             panelFooter.add(getViewButton());
-            panelFooter.add(getUpdateButton());
+            panelFooter.add(getEditButton());
             panelFooter.add(getDeleteButton());
             panelFooter.add(getCloseButton());
         }
@@ -330,11 +330,11 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
         return newButton;
     }
 
-	private JButton getUpdateButton() {
-		updateButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
-		updateButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
-		updateButton.setEnabled(false);
-		updateButton.addActionListener(actionEvent -> {
+	private JButton getEditButton() {
+		editButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
+		editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
+		editButton.setEnabled(false);
+		editButton.addActionListener(actionEvent -> {
 			MedicalInventory inventory;
 			if (jTableInventory.getSelectedRowCount() > 1) {
 				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
@@ -354,7 +354,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 			InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
 			inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
 		});
-		return updateButton;
+		return editButton;
 	}
 
     private JButton getViewButton() {
@@ -438,11 +438,11 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 				if (e.getValueIsAdjusting()) {
 					int[] selectedRows = jTableInventory.getSelectedRows();
 					if (selectedRows.length == 1) {
-						updateButton.setEnabled(true);
+						editButton.setEnabled(true);
 						viewButton.setEnabled(true);
 						deleteButton.setEnabled(true);
 					} else {
-						updateButton.setEnabled(false);
+						editButton.setEnabled(false);
 						viewButton.setEnabled(false);
 						deleteButton.setEnabled(false);
 					}
