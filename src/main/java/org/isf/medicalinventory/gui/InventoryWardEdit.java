@@ -513,7 +513,7 @@ public class InventoryWardEdit extends ModalJFrame {
                             Ward destination = (Ward) destinationComboBox.getSelectedItem();
                             inventory.setDestination(destination != null ? destination.getCode() : null);
 
-                            inventory = medicalInventoryManager.updateMedicalInventory(inventory);
+                            inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
                             if (inventory != null) {
                                 MessageDialog.info(null, "angal.inventory.update.success.msg");
                                 resetVariable();
@@ -555,7 +555,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     Ward destination = (Ward) destinationComboBox.getSelectedItem();
                     inventory.setDestination(destination != null ? destination.getCode() : null);
 
-                    inventory = medicalInventoryManager.updateMedicalInventory(inventory);
+                    inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
 
                     for (MedicalInventoryRow medicalInventoryRow : inventoryRowSearchList) {
                         medicalInventoryRow.setInventory(inventory);
@@ -626,7 +626,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 String status = InventoryStatus.validated.toString();
                 inventory.setStatus(status);
                 try {
-                    inventory = medicalInventoryManager.updateMedicalInventory(inventory);
+                    inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
                     if (inventory != null) {
                         List<MedicalInventoryRow> invRows = medicalInventoryRowManager.getMedicalInventoryRowByInventoryId(inventory.getId());
                         MessageDialog.info(null, "angal.inventory.validate.success.msg");
