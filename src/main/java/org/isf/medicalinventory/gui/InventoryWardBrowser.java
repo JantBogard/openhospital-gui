@@ -91,7 +91,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
-            MessageBundle.getMessage("angal.inventory.state.col").toUpperCase(),
+            MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.user.col").toUpperCase()
     };
     private int[] pColumwidth = { 150, 150, 100, 100, 150 };
@@ -461,10 +461,10 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
         public InventoryBrowsingModel() {
 	        inventoryList = new ArrayList<>();
-	        String state = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
+	        String status = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
 	        String type = InventoryType.ward.toString();
 	        try {
-		        inventoryList = medicalInventoryManager.getMedicalInventoryByParams(dateFrom, dateTo, state, type);
+		        inventoryList = medicalInventoryManager.getMedicalInventoryByParams(dateFrom, dateTo, status, type);
 	        } catch (OHServiceException e) {
 		        OHServiceExceptionUtil.showMessages(e);
 	        }
@@ -472,10 +472,10 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
 		public InventoryBrowsingModel(int startIndex, int pageSize) {
 		    inventoryList = new ArrayList<>();
-		    String state = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
+		    String status = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
 		    String type = InventoryType.ward.toString();
 		    try {
-			    Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, state, type, startIndex,
+			    Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, status, type, startIndex,
 					    pageSize);
 			    inventoryList = medInventorypage.getContent();
 		    } catch (OHServiceException e) {
@@ -570,7 +570,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
     private JLabel getStatusLabel() {
         if (statusLabel == null) {
-            statusLabel = new JLabel(MessageBundle.getMessage("angal.inventory.state.label"));
+            statusLabel = new JLabel(MessageBundle.getMessage("angal.inventory.status.label"));
             statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         }
         return statusLabel;
