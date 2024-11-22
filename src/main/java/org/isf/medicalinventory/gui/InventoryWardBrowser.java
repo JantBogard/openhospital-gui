@@ -135,47 +135,47 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
                 dispose();
             }
         });
-	pagesCombo.setEditable(true);
-	previous.setEnabled(false);
-	next.setEnabled(false);
-	next.addActionListener(actionEvent -> {
-	    if (!previous.isEnabled()) {
-		previous.setEnabled(true);
-	    }
-	    startIndex += PAGE_SIZE;
-	    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
-	    if (startIndex + PAGE_SIZE > totalRows) {
+		pagesCombo.setEditable(true);
+		previous.setEnabled(false);
 		next.setEnabled(false);
-	    }
-	    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
-	});
+		next.addActionListener(actionEvent -> {
+		    if (!previous.isEnabled()) {
+			previous.setEnabled(true);
+		    }
+		    startIndex += PAGE_SIZE;
+		    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+		    if (startIndex + PAGE_SIZE > totalRows) {
+			next.setEnabled(false);
+		    }
+		    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+		});
 
     	previous.addActionListener(actionEvent -> {
-	    if (!next.isEnabled()) {
-		next.setEnabled(true);
-	    }
-	    startIndex -= PAGE_SIZE;
-	    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
-	    if (startIndex < PAGE_SIZE) {
-		previous.setEnabled(false);
-	    }
-	    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
-	});
-	pagesCombo.addItemListener(itemEvent -> {
-	    int eventID = itemEvent.getStateChange();
+		    if (!next.isEnabled()) {
+			next.setEnabled(true);
+		    }
+		    startIndex -= PAGE_SIZE;
+		    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+		    if (startIndex < PAGE_SIZE) {
+			previous.setEnabled(false);
+		    }
+		    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+		});
+		pagesCombo.addItemListener(itemEvent -> {
+		    int eventID = itemEvent.getStateChange();
 
-	    if (eventID == ItemEvent.SELECTED) {
-		int page_number = (Integer) pagesCombo.getSelectedItem();
-		startIndex = (page_number - 1) * PAGE_SIZE;
+		    if (eventID == ItemEvent.SELECTED) {
+			int page_number = (Integer) pagesCombo.getSelectedItem();
+			startIndex = (page_number - 1) * PAGE_SIZE;
 
-		next.setEnabled(startIndex + PAGE_SIZE <= totalRows);
-		previous.setEnabled(page_number != 1);
-		pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
-		jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+			next.setEnabled(startIndex + PAGE_SIZE <= totalRows);
+			previous.setEnabled(page_number != 1);
+			pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+			jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
 
-		pagesCombo.setEnabled(true);
-	    }
-	});
+			pagesCombo.setEnabled(true);
+		    }
+		});
     }
 
     private JPanel getPanelHeader() {
@@ -248,15 +248,15 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JPanel getPanelFooter() {
         if (panelFooter == null) {
             panelFooter = new JPanel();
-	    next = new JButton(MessageBundle.getMessage("angal.inventory.nextarrow.btn"));
-	    next.setMnemonic(KeyEvent.VK_RIGHT);
-	    previous = new JButton(MessageBundle.getMessage("angal.inventory.previousarrow.btn"));
-	    next.setMnemonic(KeyEvent.VK_LEFT);
+		    next = new JButton(MessageBundle.getMessage("angal.inventory.nextarrow.btn"));
+		    next.setMnemonic(KeyEvent.VK_RIGHT);
+		    previous = new JButton(MessageBundle.getMessage("angal.inventory.previousarrow.btn"));
+		    next.setMnemonic(KeyEvent.VK_LEFT);
 
             panelFooter.add(previous);
-	    panelFooter.add(pagesCombo);
-	    panelFooter.add(under);
-	    panelFooter.add(next);
+		    panelFooter.add(pagesCombo);
+		    panelFooter.add(under);
+		    panelFooter.add(next);
 
             panelFooter.add(getNewButton());
             panelFooter.add(getViewButton());
@@ -331,86 +331,86 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     }
 
     private JButton getEditButton() {
-	editButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
-	editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
-	editButton.setEnabled(false);
-	editButton.addActionListener(actionEvent -> {
-		MedicalInventory inventory;
-		if (jTableInventory.getSelectedRowCount() > 1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
-			return;
-		}
-		int selectedRow = jTableInventory.getSelectedRow();
-		if (selectedRow == -1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
-			return;
-		}
-		inventory = inventoryList.get(selectedRow);
-		if (inventory.getStatus().equals(InventoryStatus.canceled.toString())) {
-			MessageDialog.error(this, "angal.inventory.cancelednoteditable.msg");
-			return;
-		}
-		InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "update");
-		InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
-		inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
-	});
-	return editButton;
+		editButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
+		editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
+		editButton.setEnabled(false);
+		editButton.addActionListener(actionEvent -> {
+			MedicalInventory inventory;
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
+			}
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			inventory = inventoryList.get(selectedRow);
+			if (inventory.getStatus().equals(InventoryStatus.canceled.toString())) {
+				MessageDialog.error(this, "angal.inventory.cancelednoteditable.msg");
+				return;
+			}
+			InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "update");
+			InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
+			inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
+		});
+		return editButton;
     }
 
     private JButton getViewButton() {
         viewButton = new JButton(MessageBundle.getMessage("angal.inventory.view.btn"));
         viewButton.setMnemonic(MessageBundle.getMnemonic("angal.inventory.view.btn.key"));
-	viewButton.setEnabled(false);
-	viewButton.addActionListener(actionEvent -> {
-		MedicalInventory inventory;
-		if (jTableInventory.getSelectedRowCount() > 1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
-			return;
-		}
-		int selectedRow = jTableInventory.getSelectedRow();
-		if (selectedRow == -1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
-			return;
-		}
-		inventory = inventoryList.get(selectedRow);
-		InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "view");
-		InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
-		inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
-	});
+		viewButton.setEnabled(false);
+		viewButton.addActionListener(actionEvent -> {
+			MedicalInventory inventory;
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
+			}
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			inventory = inventoryList.get(selectedRow);
+			InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "view");
+			InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
+			inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
+		});
         return viewButton;
     }
 
     private JButton getDeleteButton() {
         deleteButton = new JButton(MessageBundle.getMessage("angal.common.delete.btn"));
         deleteButton.setMnemonic(MessageBundle.getMnemonic("angal.common.delete.btn.key"));
-	deleteButton.setEnabled(false);
-	deleteButton.addActionListener(actionEvent -> {
-		if (jTableInventory.getSelectedRowCount() > 1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
-			return;
-		}
-		int selectedRow = jTableInventory.getSelectedRow();
-		if (selectedRow == -1) {
-			MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
-			return;
-		}
-		MedicalInventory inventory = inventoryList.get(selectedRow);
-		String currentStatus = inventory.getStatus();
-		if (currentStatus.equalsIgnoreCase(InventoryStatus.validated.toString()) || currentStatus.equalsIgnoreCase(InventoryStatus.draft.toString())) {
-			int response = MessageDialog.yesNo(this, "angal.inventory.deletion.confirm.msg");
-			if (response == JOptionPane.YES_OPTION) {
-				try {
-					medicalInventoryManager.deleteInventory(inventory);
-					MessageDialog.info(this, "angal.inventory.deletion.success.msg");
-					jTableInventory.setModel(new InventoryBrowsingModel());
-				} catch (OHServiceException e) {
-					MessageDialog.error(this, "angal.inventory.deletion.error.msg");
-				}
+		deleteButton.setEnabled(false);
+		deleteButton.addActionListener(actionEvent -> {
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
 			}
-		} else {
-			MessageDialog.error(this, "angal.inventory.deletion.error.msg");
-		}
-	});
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			MedicalInventory inventory = inventoryList.get(selectedRow);
+			String currentStatus = inventory.getStatus();
+			if (currentStatus.equalsIgnoreCase(InventoryStatus.validated.toString()) || currentStatus.equalsIgnoreCase(InventoryStatus.draft.toString())) {
+				int response = MessageDialog.yesNo(this, "angal.inventory.deletion.confirm.msg");
+				if (response == JOptionPane.YES_OPTION) {
+					try {
+						medicalInventoryManager.deleteInventory(inventory);
+						MessageDialog.info(this, "angal.inventory.deletion.success.msg");
+						jTableInventory.setModel(new InventoryBrowsingModel());
+					} catch (OHServiceException e) {
+						MessageDialog.error(this, "angal.inventory.deletion.error.msg");
+					}
+				}
+			} else {
+				MessageDialog.error(this, "angal.inventory.deletion.error.msg");
+			}
+		});
         return deleteButton;
     }
 
@@ -434,20 +434,20 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             jTableInventory = new JTable();
             jTableInventory.setFillsViewportHeight(true);
             jTableInventory.setModel(new InventoryBrowsingModel());
-	    jTableInventory.getSelectionModel().addListSelectionListener(e -> {
-		if (e.getValueIsAdjusting()) {
-			int[] selectedRows = jTableInventory.getSelectedRows();
-			if (selectedRows.length == 1) {
-				editButton.setEnabled(true);
-				viewButton.setEnabled(true);
-				deleteButton.setEnabled(true);
-			} else {
-				editButton.setEnabled(false);
-				viewButton.setEnabled(false);
-				deleteButton.setEnabled(false);
-			}
-		}
-	    });
+		    jTableInventory.getSelectionModel().addListSelectionListener(e -> {
+				if (e.getValueIsAdjusting()) {
+					int[] selectedRows = jTableInventory.getSelectedRows();
+					if (selectedRows.length == 1) {
+						editButton.setEnabled(true);
+						viewButton.setEnabled(true);
+						deleteButton.setEnabled(true);
+					} else {
+						editButton.setEnabled(false);
+						viewButton.setEnabled(false);
+						deleteButton.setEnabled(false);
+					}
+				}
+		    });
         }
         return jTableInventory;
     }
@@ -470,42 +470,42 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 	        }
         }
 
-	public InventoryBrowsingModel(int startIndex, int pageSize) {
-	    inventoryList = new ArrayList<>();
-	    String state = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
-	    String type = InventoryType.ward.toString();
-	    try {
-		    Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, state, type, startIndex,
-				    pageSize);
-		    inventoryList = medInventorypage.getContent();
-	    } catch (OHServiceException e) {
-		    OHServiceExceptionUtil.showMessages(e);
-	    }
-	}
+		public InventoryBrowsingModel(int startIndex, int pageSize) {
+		    inventoryList = new ArrayList<>();
+		    String state = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
+		    String type = InventoryType.ward.toString();
+		    try {
+			    Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, state, type, startIndex,
+					    pageSize);
+			    inventoryList = medInventorypage.getContent();
+		    } catch (OHServiceException e) {
+			    OHServiceExceptionUtil.showMessages(e);
+		    }
+		}
 
-	@Override
-        public Class<?> getColumnClass(int c) {
-            if (c == 0) {
-                return String.class;
-            } else if (c == 1) {
-                return String.class;
-            } else if (c == 2) {
-                return String.class;
-            } else if (c == 3) {
-                return String.class;
-            } else if (c == 4) {
-                return String.class;
-            }
-            return null;
-        }
-
-	@Override
-	public int getRowCount() {
-	    if (inventoryList == null) {
-		return 0;
+		@Override
+	    public Class<?> getColumnClass(int c) {
+	        if (c == 0) {
+	            return String.class;
+	        } else if (c == 1) {
+	            return String.class;
+	        } else if (c == 2) {
+	            return String.class;
+	        } else if (c == 3) {
+	            return String.class;
+	        } else if (c == 4) {
+	            return String.class;
+	        }
+	        return null;
 	    }
-	    return inventoryList.size();
-	}
+
+		@Override
+		public int getRowCount() {
+		    if (inventoryList == null) {
+			return 0;
+		    }
+		    return inventoryList.size();
+		}
 
         public String getColumnName(int c) {
             return pColums[c];
@@ -515,7 +515,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             return pColums.length;
         }
 
-	@Override
+		@Override
         public Object getValueAt(int r, int c) {
             MedicalInventory medInvt = inventoryList.get(r);
 
@@ -555,15 +555,15 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             for (InventoryStatus currentStatus : InventoryStatus.values()) {
                 statusComboBox.addItem(MessageBundle.getMessage("angal.inventory." + currentStatus));
             }
-	    statusComboBox.addActionListener(actionEvent -> {
-		InventoryBrowsingModel inventoryBrowsingModel = new InventoryBrowsingModel();
-		totalRows = inventoryBrowsingModel.getRowCount();
-		startIndex = 0;
-		previous.setEnabled(false);
-		next.setEnabled(totalRows > PAGE_SIZE);
-		jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
-		initialiseCombo(totalRows);
-	    });
+		    statusComboBox.addActionListener(actionEvent -> {
+				InventoryBrowsingModel inventoryBrowsingModel = new InventoryBrowsingModel();
+				totalRows = inventoryBrowsingModel.getRowCount();
+				startIndex = 0;
+				previous.setEnabled(false);
+				next.setEnabled(totalRows > PAGE_SIZE);
+				jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+				initialiseCombo(totalRows);
+		    });
         }
         return statusComboBox;
     }
@@ -577,25 +577,25 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     }
 
     private void ajustWidth() {
-	for (int i = 0; i < pColumwidth.length; i++) {
-		jTableInventory.getColumnModel().getColumn(i).setMinWidth(pColumwidth[i]);
-	}
+		for (int i = 0; i < pColumwidth.length; i++) {
+			jTableInventory.getColumnModel().getColumn(i).setMinWidth(pColumwidth[i]);
+		}
     }
 
     public void initialiseCombo(int total_rows) {
-	int j = 0;
+		int j = 0;
 
-	pagesCombo.removeAllItems();
-	for (int i = 0; i < total_rows / PAGE_SIZE; i++) {
-		j = i + 1;
-		pagesCombo.addItem(j);
-	}
-	if (j * PAGE_SIZE < total_rows) {
-		pagesCombo.addItem(j + 1);
-		under.setText("/" + (total_rows / PAGE_SIZE + 1 + " " + MessageBundle.getMessage("angal.inventory.pages.text")));
-	} else {
-		under.setText("/" + total_rows / PAGE_SIZE + " " + MessageBundle.getMessage("angal.inventory.pages.text"));
-	}
+		pagesCombo.removeAllItems();
+		for (int i = 0; i < total_rows / PAGE_SIZE; i++) {
+			j = i + 1;
+			pagesCombo.addItem(j);
+		}
+		if (j * PAGE_SIZE < total_rows) {
+			pagesCombo.addItem(j + 1);
+			under.setText("/" + (total_rows / PAGE_SIZE + 1 + " " + MessageBundle.getMessage("angal.inventory.pages.text")));
+		} else {
+			under.setText("/" + total_rows / PAGE_SIZE + " " + MessageBundle.getMessage("angal.inventory.pages.text"));
+		}
     }
 
     @Override
