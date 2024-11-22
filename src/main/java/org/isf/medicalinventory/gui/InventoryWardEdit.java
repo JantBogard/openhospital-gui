@@ -74,22 +74,20 @@ import org.isf.generaldata.GeneralData;
 import org.isf.generaldata.MessageBundle;
 import org.isf.medicalinventory.manager.MedicalInventoryManager;
 import org.isf.medicalinventory.manager.MedicalInventoryRowManager;
+import org.isf.medicalinventory.model.InventoryStatus;
+import org.isf.medicalinventory.model.InventoryType;
 import org.isf.medicalinventory.model.MedicalInventory;
 import org.isf.medicalinventory.model.MedicalInventoryRow;
 import org.isf.medicals.manager.MedicalBrowsingManager;
 import org.isf.medicals.model.Medical;
-import org.isf.medicalstock.model.Lot;
 import org.isf.medicalstockward.manager.MovWardBrowserManager;
 import org.isf.medicalstockward.model.MedicalWard;
-import org.isf.medstockmovtype.manager.MedicalDsrStockMovementTypeBrowserManager;
 import org.isf.menu.manager.Context;
 import org.isf.menu.manager.UserBrowsingManager;
 import org.isf.utils.db.NormalizeString;
 import org.isf.utils.exception.OHServiceException;
 import org.isf.utils.exception.gui.OHServiceExceptionUtil;
 import org.isf.utils.jobjects.GoodDateChooser;
-import org.isf.utils.jobjects.InventoryStatus;
-import org.isf.utils.jobjects.InventoryType;
 import org.isf.utils.jobjects.MessageDialog;
 import org.isf.utils.jobjects.ModalJFrame;
 import org.isf.utils.jobjects.TextPrompt;
@@ -123,9 +121,9 @@ public class InventoryWardEdit extends ModalJFrame {
         };
 
         EventListener[] listeners = InventoryListeners.getListeners(InventoryListener.class);
-        for (int i = 0; i < listeners.length; i++) {
-            ((InventoryListener) listeners[i]).InventoryUpdated(event);
-        }
+	    for (EventListener listener : listeners) {
+		    ((InventoryListener) listener).InventoryUpdated(event);
+	    }
         jTableInventoryRow.updateUI();
     }
 
@@ -206,8 +204,6 @@ public class InventoryWardEdit extends ModalJFrame {
             .getBean(MedicalBrowsingManager.class);
     private MovWardBrowserManager movWardBrowserManager = Context.getApplicationContext()
             .getBean(MovWardBrowserManager.class);
-    private MedicalDsrStockMovementTypeBrowserManager medStockMovTypeManager = Context.getApplicationContext()
-            .getBean(MedicalDsrStockMovementTypeBrowserManager.class);
 
 
     public InventoryWardEdit() {
@@ -219,6 +215,7 @@ public class InventoryWardEdit extends ModalJFrame {
 
     public InventoryWardEdit(MedicalInventory inventory, String modee) {
         this.inventory = inventory;
+        wardId = this.inventory.getWard();
         mode = modee;
         initComponents();
     }
@@ -998,7 +995,6 @@ public class InventoryWardEdit extends ModalJFrame {
     private List<MedicalInventoryRow> getMedicalInventoryRows(String code) throws OHServiceException {
         List<MedicalInventoryRow> inventoryRowsList = new ArrayList<>();
         List<MedicalWard> medicalWardList = new ArrayList<>();
-        List<Lot> lots;
         Medical medical;
         MedicalInventoryRow inventoryRowTemp;
         if (code != null) {
@@ -1009,7 +1005,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 MessageDialog.error(null, MessageBundle.getMessage("angal.inventory.noproductfound.msg"));
             }
         } else {
-            medicalWardList = movWardBrowserManager.getMedicalsWard(wardId.charAt(0), false);
+            medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, false);
         }
         for (MedicalWard medicalWard: medicalWardList) {
             inventoryRowTemp = new MedicalInventoryRow(0, medicalWard.getQty(), medicalWard.getQty(), null,
@@ -1067,9 +1063,6 @@ public class InventoryWardEdit extends ModalJFrame {
                     if (allRadio.isSelected()) {
                         codeTextField.setEnabled(false);
                         codeTextField.setText("");
-                        if (wardId.isEmpty()) {
-                            wardId = wardSelected.getCode();
-                        }
                         if (!inventoryRowSearchList.isEmpty()) {
                             int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttoaddallnotyetlistedproducts.msg");
                             if (info == JOptionPane.YES_OPTION) {
@@ -1183,7 +1176,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 }
             }
         } else {
-            medicalWardList = movWardBrowserManager.getMedicalsWard(wardId.charAt(0), false);
+            medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, false);
         }
         inventoryRowsList = medicalWardList.stream().map(medWard -> new MedicalInventoryRow(0, medWard.getQty(),
                 medWard.getQty(), null, medWard.getMedical(), medWard.getLot())).toList();
@@ -1197,7 +1190,7 @@ public class InventoryWardEdit extends ModalJFrame {
 
     private Medical chooseMedical(String text) throws OHServiceException {
         Map<String, Medical> medicalMap;
-        List<Medical> medicals = movWardBrowserManager.getMedicalsWard(wardId.charAt(0), false).stream().map(MedicalWard::getMedical).toList();
+        List<Medical> medicals = movWardBrowserManager.getMedicalsWard(wardId, false).stream().map(MedicalWard::getMedical).toList();
 
         medicalMap = new HashMap<>();
         for (Medical med : medicals) {
