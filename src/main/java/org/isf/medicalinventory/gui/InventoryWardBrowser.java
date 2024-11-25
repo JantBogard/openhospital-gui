@@ -71,6 +71,16 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
 	private static final long serialVersionUID = 1L;
 	private static final int PAGE_SIZE = 50;
+	private final String[] pColums = {
+					MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
+					MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.user.col").toUpperCase()
+	};
+	private final int[] pColumwidth = { 150, 150, 100, 100, 150 };
+	private final MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
+	private final WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
 	JButton next;
 	JButton previous;
 	JComboBox<Integer> pagesCombo = new JComboBox<>();
@@ -91,20 +101,10 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 	private JButton viewButton;
 	private JScrollPane scrollPaneInventory;
 	private JTable jTableInventory;
-	private final String[] pColums = {
-					MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
-					MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
-					MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
-					MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
-					MessageBundle.getMessage("angal.common.user.col").toUpperCase()
-	};
-	private final int[] pColumwidth = { 150, 150, 100, 100, 150 };
 	private JComboBox<String> statusComboBox;
 	private JLabel statusLabel;
 	private int startIndex;
 	private int totalRows;
-	private final MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
-	private final WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
 	private List<MedicalInventory> inventoryList;
 
 	public InventoryWardBrowser() {
