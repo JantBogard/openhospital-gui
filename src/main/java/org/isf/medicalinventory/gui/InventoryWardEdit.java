@@ -1041,7 +1041,7 @@ public class InventoryWardEdit extends ModalJFrame {
 
     private JRadioButton getSpecificRadio() {
         if (specificRadio == null) {
-            specificRadio = new JRadioButton(MessageBundle.getMessage("angal.inventory.specificproduct.btn"));
+            specificRadio = new JRadioButton(MessageBundle.getMessage("angal.inventory.specificproduct.radio"));
             specificRadio.addActionListener(actionEvent -> {
                 if (specificRadio.isSelected()) {
                     codeTextField.setEnabled(true);
@@ -1055,7 +1055,7 @@ public class InventoryWardEdit extends ModalJFrame {
 
     private JRadioButton getAllRadio() {
         if (allRadio == null) {
-            allRadio = new JRadioButton(MessageBundle.getMessage("angal.inventory.allproduct.btn"));
+            allRadio = new JRadioButton(MessageBundle.getMessage("angal.inventory.allproduct.radio"));
             allRadio.setSelected(inventory != null);
             specificRadio.setSelected(inventory == null);
             allRadio.addActionListener(actionEvent -> {
@@ -1198,7 +1198,7 @@ public class InventoryWardEdit extends ModalJFrame {
             key = med.getCode().toString().toLowerCase();
             medicalMap.put(key, med);
         }
-        List<Medical> medList = new ArrayList<>();
+        ArrayList<Medical> medList = new ArrayList<>();
         for (Medical aMed : medicalMap.values()) {
             if (NormalizeString.normalizeContains(aMed.getDescription().toLowerCase(), text)) {
                 medList.add(aMed);
@@ -1341,7 +1341,7 @@ public class InventoryWardEdit extends ModalJFrame {
                         }
 
                         if (medicalWardInventoryDraft.isEmpty() && medicalWardInventoryValidated.isEmpty()) {
-                            activateSomeComponents();
+                            activedSomeComponents();
                         } else {
                             MessageDialog.error(this,
                                     "angal.inventory.cannotcreateanotherinventorywithotherinprogressinthisward.msg");
@@ -1402,7 +1402,7 @@ public class InventoryWardEdit extends ModalJFrame {
         deleteButton.setEnabled(false);
     }
 
-    private void activateSomeComponents() {
+    private void activedSomeComponents() {
         jCalendarInventory.setEnabled(true);
         specificRadio.setEnabled(true);
         codeTextField.setEnabled(true);

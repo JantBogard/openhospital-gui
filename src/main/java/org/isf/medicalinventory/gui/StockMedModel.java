@@ -23,7 +23,6 @@ package org.isf.medicalinventory.gui;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.swing.table.DefaultTableModel;
 
@@ -34,10 +33,10 @@ import org.isf.utils.db.NormalizeString;
 public class StockMedModel extends DefaultTableModel {
 
     private static final long serialVersionUID = 1L;
-    private List<Medical> medList;
-    private List<Medical> initList = new ArrayList<>();
+    private ArrayList<Medical> medList;
+    private ArrayList<Medical> initList = new ArrayList<Medical>();
 
-    public StockMedModel(List<Medical> meds) {
+    public StockMedModel(ArrayList<Medical> meds) {
         medList = meds;
         initList.addAll(medList);
     }
