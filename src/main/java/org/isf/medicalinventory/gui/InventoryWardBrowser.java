@@ -70,7 +70,7 @@ import org.springframework.data.domain.Page;
 public class InventoryWardBrowser extends ModalJFrame implements InventoryListener {
 
 	private static final long serialVersionUID = 1L;
-	private static int PAGE_SIZE = 50;
+	private static final int PAGE_SIZE = 50;
 	JButton next;
 	JButton previous;
 	JComboBox<Integer> pagesCombo = new JComboBox<>();
@@ -91,20 +91,20 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 	private JButton viewButton;
 	private JScrollPane scrollPaneInventory;
 	private JTable jTableInventory;
-	private String[] pColums = {
-			MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
-			MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
-			MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
-			MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
-			MessageBundle.getMessage("angal.common.user.col").toUpperCase()
+	private final String[] pColums = {
+					MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
+					MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
+					MessageBundle.getMessage("angal.common.user.col").toUpperCase()
 	};
-	private int[] pColumwidth = { 150, 150, 100, 100, 150 };
+	private final int[] pColumwidth = { 150, 150, 100, 100, 150 };
 	private JComboBox<String> statusComboBox;
 	private JLabel statusLabel;
 	private int startIndex;
 	private int totalRows;
-	private MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
-	private WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
+	private final MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
+	private final WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
 	private List<MedicalInventory> inventoryList;
 
 	public InventoryWardBrowser() {
@@ -541,8 +541,8 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 			String type = InventoryType.ward.toString();
 			try {
 				Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, status, type,
-						startIndex,
-						pageSize);
+								startIndex,
+								pageSize);
 				inventoryList = medInventorypage.getContent();
 			} catch (OHServiceException e) {
 				OHServiceExceptionUtil.showMessages(e);
