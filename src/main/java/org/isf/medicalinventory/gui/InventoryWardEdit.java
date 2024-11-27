@@ -184,17 +184,11 @@ public class InventoryWardEdit extends ModalJFrame {
     private JTextField referenceTextField;
     private JTextField jTextFieldEditor;
     private JLabel wardLabel;
-    private JLabel destinationLabel;
-    private JLabel reasonLabel;
     private JComboBox<Ward> wardComboBox;
-    private JComboBox<Ward> destinationComboBox;
-    private JTextField reasonTextField;
     private Ward wardSelected;
     private JLabel loaderLabel;
     private boolean selectAll;
     private String newReference;
-    private Ward destination;
-    private String reason;
     private WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
     private MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext()
             .getBean(MedicalInventoryManager.class);
@@ -258,11 +252,9 @@ public class InventoryWardEdit extends ModalJFrame {
             jCalendarInventory.setEnabled(false);
             specificRadio.setEnabled(false);
             allRadio.setEnabled(false);
-            destinationComboBox.setEnabled(false);
             wardComboBox.setEnabled(false);
             validateButton.setVisible(false);
             printButton.setVisible(true);
-            reasonTextField.setEnabled(false);
         } else {
             saveButton.setVisible(true);
             deleteButton.setVisible(true);
@@ -272,11 +264,9 @@ public class InventoryWardEdit extends ModalJFrame {
             jCalendarInventory.setEnabled(true);
             specificRadio.setEnabled(true);
             allRadio.setEnabled(true);
-            destinationComboBox.setEnabled(true);
             wardComboBox.setEnabled(true);
             validateButton.setVisible(true);
             printButton.setVisible(false);
-            reasonTextField.setEnabled(true);
         }
     }
 
@@ -285,7 +275,7 @@ public class InventoryWardEdit extends ModalJFrame {
             panelHeader = new JPanel();
             panelHeader.setBorder(new EmptyBorder(5, 0, 5, 0));
             GridBagLayout gbl_panelHeader = new GridBagLayout();
-            gbl_panelHeader.columnWidths = new int[] { 159, 191, 192, 218, 51, 0 };
+            gbl_panelHeader.columnWidths = new int[] { 159, 191, 192, 218, 218, 0 };
             gbl_panelHeader.rowHeights = new int[] { 30, 30, 0 };
             gbl_panelHeader.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
             gbl_panelHeader.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
@@ -308,6 +298,7 @@ public class InventoryWardEdit extends ModalJFrame {
             gbc_loaderLabel.gridy = 0;
             panelHeader.add(getLoaderLabel(), gbc_loaderLabel);
             GridBagConstraints gbc_dateInventoryLabel = new GridBagConstraints();
+            gbc_dateInventoryLabel.anchor = GridBagConstraints.EAST;
             gbc_dateInventoryLabel.insets = new Insets(0, 0, 5, 5);
             gbc_dateInventoryLabel.gridx = 0;
             gbc_dateInventoryLabel.gridy = 1;
@@ -338,31 +329,6 @@ public class InventoryWardEdit extends ModalJFrame {
             gbc_statusLabel.gridy = 1;
             gbc_statusLabel.gridheight = 3;
             panelHeader.add(getStatusLabel(), gbc_statusLabel);
-            GridBagConstraints gbc_destinationLabel = new GridBagConstraints();
-            gbc_destinationLabel.anchor = GridBagConstraints.EAST;
-            gbc_destinationLabel.insets = new Insets(0, 0, 3, 3);
-            gbc_destinationLabel.gridx = 0;
-            gbc_destinationLabel.gridy = 3;
-            panelHeader.add(getDestinationLabel(), gbc_destinationLabel);
-            GridBagConstraints gbc_destinationComboBox = new GridBagConstraints();
-            gbc_destinationComboBox.fill = GridBagConstraints.HORIZONTAL;
-            gbc_destinationComboBox.insets = new Insets(0, 0, 3, 3);
-            gbc_destinationComboBox.gridx = 1;
-            gbc_destinationComboBox.gridy = 3;
-            panelHeader.add(getDestinationComboBox(), gbc_destinationComboBox);
-
-            GridBagConstraints gbc_reasonLabel = new GridBagConstraints();
-            gbc_reasonLabel.anchor = GridBagConstraints.EAST;
-            gbc_reasonLabel.insets = new Insets(0, 0, 3,3);
-            gbc_reasonLabel.gridx = 2;
-            gbc_reasonLabel.gridy = 3;
-            panelHeader.add(getReasonLabel(), gbc_reasonLabel);
-            GridBagConstraints gbc_reasonTexField = new GridBagConstraints();
-            gbc_reasonTexField.insets = new Insets(0, 0, 5, 5);
-            gbc_reasonTexField.fill = GridBagConstraints.HORIZONTAL;
-            gbc_reasonTexField.gridx = 3;
-            gbc_reasonTexField.gridy = 3;
-            panelHeader.add(getReasonTextField(), gbc_reasonTexField);
 
             GridBagConstraints gbc_specificRadio = new GridBagConstraints();
             gbc_specificRadio.anchor = GridBagConstraints.EAST;
@@ -448,8 +414,6 @@ public class InventoryWardEdit extends ModalJFrame {
                 if (!inventoryRowsToDelete.isEmpty()) {
                     medicalInventoryRowManager.deleteMedicalInventoryRows(inventoryRowsToDelete);
                 }
-	            destination = (Ward) destinationComboBox.getSelectedItem();
-                reason = reasonTextField.getText();
                 if (inventory == null && mode.equals("new")) {
                     newReference = referenceTextField.getText().trim();
                     boolean refExist;
@@ -464,9 +428,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     inventory.setStatus(state);
                     inventory.setUser(user);
                     inventory.setInventoryType(InventoryType.ward.toString());
-                    inventory.setDestination(destination != null ? destination.getCode() : null);
                     inventory.setWard(wardSelected != null ? wardSelected.getCode() : null);
-                    inventory.setReason(reason);
                     inventory = medicalInventoryManager.newMedicalInventory(inventory);
                     for (MedicalInventoryRow medicalInventoryRow : inventoryRowSearchList) {
                         medicalInventoryRow.setInventory(inventory);
@@ -482,9 +444,7 @@ public class InventoryWardEdit extends ModalJFrame {
                         dispose();
                     }
                 } else if (inventory != null && mode.equals("update")) {
-                    String lastDestination = inventory.getDestination();
                     String lastReference = inventory.getInventoryReference();
-                    String lastReason = inventory.getReason();
                     newReference = referenceTextField.getText().trim();
                     MedicalInventory existingInventory =  medicalInventoryManager.getInventoryByReference(newReference);
                     if (existingInventory != null && !Objects.equals(existingInventory.getId(), inventory.getId())) {
@@ -492,10 +452,7 @@ public class InventoryWardEdit extends ModalJFrame {
                         return;
                     }
                     if (inventoryRowListAdded.isEmpty()) {
-                        if ((destination != null && !destination.getCode().equals(lastDestination))
-                                || (destination == null && lastDestination != null) || !reason.equals(lastReason)
-                                || !newReference.equals(lastReference)
-                        ) {
+                        if (!newReference.equals(lastReference)) {
                             if (!inventory.getInventoryDate().equals(dateInventory)) {
                                 inventory.setInventoryDate(dateInventory);
                             }
@@ -505,12 +462,6 @@ public class InventoryWardEdit extends ModalJFrame {
                             if (!newReference.equals(lastReference)) {
                                 inventory.setInventoryReference(newReference);
                             }
-                            if (!reason.equals(lastReason)) {
-                                inventory.setReason(reason);
-                            }
-
-                            Ward destination = (Ward) destinationComboBox.getSelectedItem();
-                            inventory.setDestination(destination != null ? destination.getCode() : null);
 
                             inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
                             if (inventory != null) {
@@ -550,9 +501,6 @@ public class InventoryWardEdit extends ModalJFrame {
                     if (!lastReference.equals(newReference)) {
                         inventory.setInventoryReference(newReference);
                     }
-
-                    Ward destination = (Ward) destinationComboBox.getSelectedItem();
-                    inventory.setDestination(destination != null ? destination.getCode() : null);
 
                     inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
 
@@ -599,14 +547,6 @@ public class InventoryWardEdit extends ModalJFrame {
                 if (destinationCode == null || destinationCode.isEmpty()) {
                     MessageDialog.error(null, "angal.inventory.choosedestinationbeforevalidation.msg");
                     return;
-                }
-                if (inventory.getReason() == null || inventory.getReason().isEmpty()) {
-                    if (!reasonTextField.getText().isEmpty()) {
-                        inventory.setReason(reasonTextField.getText());
-                    } else {
-                        MessageDialog.error(null, "angal.inventory.pleasefilloutreasonfield.msg");
-                        return;
-                    }
                 }
                 // validate inventory
                 int inventoryRowsSize = inventoryRowSearchList.size();
@@ -724,22 +664,15 @@ public class InventoryWardEdit extends ModalJFrame {
         closeButton = new JButton(MessageBundle.getMessage("angal.common.close.btn"));
         closeButton.setMnemonic(MessageBundle.getMnemonic("angal.common.close.btn.key"));
         closeButton.addActionListener(actionEvent -> {
-            String lastDestination = null;
             String lastReference = null;
-            String lastReason = null;
-            reason = reasonTextField.getText();
             newReference = referenceTextField.getText().trim();
             LocalDateTime lastDate = dateInventory;
             if (inventory != null) {
-                lastDestination = inventory.getDestination();
                 lastReference = inventory.getInventoryReference();
                 lastDate = inventory.getInventoryDate();
-                lastReason = inventory.getReason();
             }
 
-            if (!inventoryRowsToDelete.isEmpty() || (destination != null && !destination.getCode().equals(lastDestination))
-                    || (destination == null && lastDestination != null) || !newReference.equals(lastReference)
-                    || !reason.equals(lastReason) || !lastDate.toLocalDate().equals(dateInventory.toLocalDate())
+            if (!inventoryRowsToDelete.isEmpty() || !newReference.equals(lastReference) || !lastDate.toLocalDate().equals(dateInventory.toLocalDate())
             ) {
                 int reset = MessageDialog.yesNoCancel(null, "angal.inventory.doyouwanttosavethechanges.msg");
                 if (reset == JOptionPane.YES_OPTION) {
@@ -1281,20 +1214,6 @@ public class InventoryWardEdit extends ModalJFrame {
         return wardLabel;
     }
 
-    private JLabel getDestinationLabel() {
-        if (destinationLabel == null) {
-            destinationLabel = new JLabel(MessageBundle.getMessage("angal.inventory.destination.label"));
-        }
-        return destinationLabel;
-    }
-
-    private JLabel getReasonLabel() {
-        if (reasonLabel == null) {
-            reasonLabel = new JLabel(MessageBundle.getMessage("angal.inventory.reason.label"));
-        }
-        return reasonLabel;
-    }
-
     private JComboBox<Ward> getWardComboBox() {
         if (wardComboBox == null) {
             wardComboBox = new JComboBox<>();
@@ -1355,42 +1274,6 @@ public class InventoryWardEdit extends ModalJFrame {
         return wardComboBox;
     }
 
-    private JComboBox<Ward> getDestinationComboBox() {
-        Ward destinationSelected = null;
-        if (destinationComboBox == null) {
-            destinationComboBox = new JComboBox<>();
-            try {
-                List<Ward> wards = wardBrowserManager.getWards();
-                destinationComboBox.addItem(null);
-                for (Ward ward: wards) {
-                    destinationComboBox.addItem(ward);
-                    if (inventory != null && ward.getCode().equals(inventory.getDestination())) {
-                        destinationSelected = ward;
-                    }
-                }
-            } catch (OHServiceException e) {
-                OHServiceExceptionUtil.showMessages(e);
-            }
-            if (inventory != null) {
-                destinationComboBox.setSelectedItem(destinationSelected);
-                destination = destinationSelected;
-            }
-            destinationComboBox.addActionListener(actionEvent -> destination = (Ward) destinationComboBox.getSelectedItem());
-        }
-        return destinationComboBox;
-    }
-
-    private JTextField getReasonTextField() {
-        if (reasonTextField == null) {
-            reasonTextField = new JTextField();
-            reasonTextField.setColumns(10);
-            if (inventory != null && !mode.equals("new")) {
-                reasonTextField.setText(inventory.getReason());
-            }
-        }
-        return reasonTextField;
-    }
-
     private void disabledSomeComponents() {
         jCalendarInventory.setEnabled(false);
         specificRadio.setEnabled(false);
@@ -1399,8 +1282,6 @@ public class InventoryWardEdit extends ModalJFrame {
         referenceTextField.setEnabled(false);
         jTableInventoryRow.setEnabled(false);
         saveButton.setEnabled(false);
-        destinationComboBox.setEnabled(false);
-        reasonTextField.setEnabled(false);
         deleteButton.setEnabled(false);
     }
 
@@ -1413,8 +1294,6 @@ public class InventoryWardEdit extends ModalJFrame {
         jTableInventoryRow.setEnabled(true);
         wardComboBox.setEnabled(false);
         saveButton.setEnabled(true);
-        destinationComboBox.setEnabled(true);
-        reasonTextField.setEnabled(true);
         deleteButton.setEnabled(true);
     }
 

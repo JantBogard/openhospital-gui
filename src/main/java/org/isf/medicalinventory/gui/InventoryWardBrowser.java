@@ -331,8 +331,8 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     }
 
     private JButton getEditButton() {
-		editButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
-		editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
+		editButton = new JButton(MessageBundle.getMessage("angal.common.edit.btn"));
+		editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.edit.btn.key"));
 		editButton.setEnabled(false);
 		editButton.addActionListener(actionEvent -> {
 			MedicalInventory inventory;
