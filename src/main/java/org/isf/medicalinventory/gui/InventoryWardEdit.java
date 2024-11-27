@@ -262,6 +262,7 @@ public class InventoryWardEdit extends ModalJFrame {
             wardComboBox.setEnabled(false);
             validateButton.setVisible(false);
             printButton.setVisible(true);
+            reasonTextField.setEnabled(false);
         } else {
             saveButton.setVisible(true);
             deleteButton.setVisible(true);
@@ -275,6 +276,7 @@ public class InventoryWardEdit extends ModalJFrame {
             wardComboBox.setEnabled(true);
             validateButton.setVisible(true);
             printButton.setVisible(false);
+            reasonTextField.setEnabled(true);
         }
     }
 
