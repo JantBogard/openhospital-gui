@@ -203,7 +203,6 @@ public class InventoryWardEdit extends ModalJFrame {
     public InventoryWardEdit() {
         mode = "new";
         initComponents();
-        resetButton.setVisible(false);
         disabledSomeComponents();
     }
 
@@ -549,37 +548,42 @@ public class InventoryWardEdit extends ModalJFrame {
                     return;
                 }
                 // validate inventory
-                int inventoryRowsSize = inventoryRowSearchList.size();
+                String status = InventoryStatus.validated.toString();
                 try {
                     medicalInventoryManager.validateMedicalWardInventoryRow(inventory, inventoryRowSearchList);
-                } catch (OHServiceException e) {
-                    OHServiceExceptionUtil.showMessages(e);
-                    try {
-                        jTableInventoryRow.setModel(new InventoryRowModel());
-                        adjustWidth();
-                    } catch (OHServiceException e1) {
-                        OHServiceExceptionUtil.showMessages(e);
-                    }
-                    return;
-                }
-                String status = InventoryStatus.validated.toString();
-                inventory.setStatus(status);
-                try {
+                    inventory.setStatus(status);
                     inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
-                    if (inventory != null) {
-                        List<MedicalInventoryRow> invRows = medicalInventoryRowManager.getMedicalInventoryRowByInventoryId(inventory.getId());
-                        MessageDialog.info(null, "angal.inventory.validate.success.msg");
-                        if (invRows.size() > inventoryRowsSize) {
-                            MessageDialog.error(null, "angal.inventory.theoreticalqtyhavebeenupdatedforsomemedical.msg");
-                        }
-                        fireInventoryUpdated();
-                        statusLabel.setText(status.toUpperCase());
-                        statusLabel.setForeground(Color.BLUE);
-                    } else {
-                        MessageDialog.info(null, "angal.inventory.validate.error.msg");
-                    }
+                    MessageDialog.info(null, "angal.inventory.validate.success.msg");
+                    statusLabel.setText(status.toUpperCase());
+                    statusLabel.setForeground(Color.BLUE);
+                    fireInventoryUpdated();
                 } catch (OHServiceException e) {
                     OHServiceExceptionUtil.showMessages(e);
+                    int answer = MessageDialog.yesNo(null, "angal.inventory.doyouwanttoactualizetheinventory.msg");
+                    if (answer == JOptionPane.YES_OPTION) {
+                        try {
+                            inventory.setStatus(status);
+                            medicalInventoryManager.actualizeMedicalWardInventoryRow(inventory);
+                            statusLabel.setText(status.toUpperCase());
+                            statusLabel.setForeground(Color.BLUE);
+                            jTableInventoryRow.setModel(new InventoryRowModel());
+                            fireInventoryUpdated();
+                            adjustWidth();
+                        } catch (OHServiceException e1) {
+                            OHServiceExceptionUtil.showMessages(e1);
+                        }
+                    } else {
+						try {
+                            inventory.setStatus(InventoryStatus.draft.toString());
+                            statusLabel.setText(InventoryStatus.draft.toString());
+                            statusLabel.setForeground(Color.GRAY);
+                            inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
+                            fireInventoryUpdated();
+						} catch (OHServiceException ex) {
+                            OHServiceExceptionUtil.showMessages(ex);
+						}
+
+					}
                 }
 			}
         });
@@ -664,7 +668,7 @@ public class InventoryWardEdit extends ModalJFrame {
         closeButton = new JButton(MessageBundle.getMessage("angal.common.close.btn"));
         closeButton.setMnemonic(MessageBundle.getMnemonic("angal.common.close.btn.key"));
         closeButton.addActionListener(actionEvent -> {
-            String lastReference = null;
+            String lastReference = "";
             newReference = referenceTextField.getText().trim();
             LocalDateTime lastDate = dateInventory;
             if (inventory != null) {
@@ -672,8 +676,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 lastDate = inventory.getInventoryDate();
             }
 
-            if (!inventoryRowsToDelete.isEmpty() || !newReference.equals(lastReference) || !lastDate.toLocalDate().equals(dateInventory.toLocalDate())
-            ) {
+            if (!inventoryRowsToDelete.isEmpty() || !newReference.equals(lastReference) || !lastDate.toLocalDate().equals(dateInventory.toLocalDate())) {
                 int reset = MessageDialog.yesNoCancel(null, "angal.inventory.doyouwanttosavethechanges.msg");
                 if (reset == JOptionPane.YES_OPTION) {
                     this.saveButton.doClick();
@@ -1092,26 +1095,22 @@ public class InventoryWardEdit extends ModalJFrame {
         }
         if (code != null) {
             medical = medicalBrowsingManager.getMedicalByMedicalCode(code);
-            if (medical != null) {
-                medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false);
-            } else {
+            if (medical == null) {
                 medical = chooseMedical(code);
-                if (medical != null) {
-                    boolean found = false;
-                    if (inventoryRowSearchList != null) {
-                        for (MedicalInventoryRow row : inventoryRowSearchList) {
-                            if (row.getMedical().getCode().equals(medical.getCode())) {
-                                found = true;
-                            }
-                        }
-                    }
-                    if (!found) {
-                        medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false);
+            }
+            if (medical != null && inventoryRowSearchList != null) {
+                boolean found = false;
+                for (MedicalInventoryRow row : inventoryRowSearchList) {
+                    if (row.getMedical().getCode().equals(medical.getCode())) {
+                        found = true;
                     }
                 }
+                if (!found) {
+                    medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false);
+                } else {
+                    MessageDialog.info(null, "angal.inventory.medicalalreadyexistinlist.msg");
+                }
             }
-        } else {
-            medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, false);
         }
         inventoryRowsList = medicalWardList.stream().map(medWard -> new MedicalInventoryRow(0, medWard.getQty(),
                 medWard.getQty(), null, medWard.getMedical(), medWard.getLot())).toList();
@@ -1149,7 +1148,7 @@ public class InventoryWardEdit extends ModalJFrame {
             dialog.setSize(600, 350);
             dialog.setLocationRelativeTo(null);
             dialog.setModal(true);
-            dialog.setTitle(MessageBundle.getMessage("angal.medicalstock.multiplecharging.selectmedical.title"));
+            dialog.setTitle(MessageBundle.getMessage("angal.medicalstock.multiplecharging.chooseamedical"));
             framas.setParentFrame(dialog);
             dialog.setContentPane(framas);
             dialog.setVisible(true);
@@ -1283,6 +1282,7 @@ public class InventoryWardEdit extends ModalJFrame {
         jTableInventoryRow.setEnabled(false);
         saveButton.setEnabled(false);
         deleteButton.setEnabled(false);
+        resetButton.setEnabled(false);
     }
 
     private void activateSomeComponents() {
@@ -1295,6 +1295,7 @@ public class InventoryWardEdit extends ModalJFrame {
         wardComboBox.setEnabled(false);
         saveButton.setEnabled(true);
         deleteButton.setEnabled(true);
+        resetButton.setEnabled(true);
     }
 
     private JLabel getLoaderLabel() {
