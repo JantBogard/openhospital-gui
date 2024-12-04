@@ -412,6 +412,10 @@ public class InventoryWardEdit extends ModalJFrame {
             try {
                 if (!inventoryRowsToDelete.isEmpty()) {
                     medicalInventoryRowManager.deleteMedicalInventoryRows(inventoryRowsToDelete);
+                    if (inventory.getStatus().equals(InventoryStatus.validated.toString())){
+                        inventory.setStatus(InventoryStatus.draft.toString());
+                        inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
+                    }
                 }
                 if (inventory == null && mode.equals("new")) {
                     newReference = referenceTextField.getText().trim();
@@ -451,7 +455,7 @@ public class InventoryWardEdit extends ModalJFrame {
                         return;
                     }
                     if (inventoryRowListAdded.isEmpty()) {
-                        if (!newReference.equals(lastReference)) {
+                        if (!newReference.equals(lastReference) || !inventory.getInventoryDate().equals(dateInventory)) {
                             if (!inventory.getInventoryDate().equals(dateInventory)) {
                                 inventory.setInventoryDate(dateInventory);
                             }
@@ -461,10 +465,15 @@ public class InventoryWardEdit extends ModalJFrame {
                             if (!newReference.equals(lastReference)) {
                                 inventory.setInventoryReference(newReference);
                             }
+                            if(inventory.getStatus().equals(InventoryStatus.validated.toString())) {
+                                inventory.setStatus(InventoryStatus.draft.toString());
+                            }
 
                             inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
                             if (inventory != null) {
                                 MessageDialog.info(null, "angal.inventory.update.success.msg");
+                                statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
+                                statusLabel.setForeground(Color.GRAY);
                                 resetVariable();
                                 fireInventoryUpdated();
                                 int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
@@ -478,6 +487,8 @@ public class InventoryWardEdit extends ModalJFrame {
                         } else {
                             if (!inventoryRowsToDelete.isEmpty()) {
                                 MessageDialog.info(null, "angal.inventory.update.success.msg");
+                                statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
+                                statusLabel.setForeground(Color.GRAY);
                                 resetVariable();
                                 fireInventoryUpdated();
                                 int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
@@ -500,6 +511,9 @@ public class InventoryWardEdit extends ModalJFrame {
                     if (!lastReference.equals(newReference)) {
                         inventory.setInventoryReference(newReference);
                     }
+                    if(inventory.getStatus().equals(InventoryStatus.validated.toString())) {
+                        inventory.setStatus(InventoryStatus.draft.toString());
+                    }
 
                     inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
 
@@ -516,6 +530,8 @@ public class InventoryWardEdit extends ModalJFrame {
                         }
                     }
                     MessageDialog.info(null, "angal.inventory.update.success.msg");
+                    statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
+                    statusLabel.setForeground(Color.GRAY);
                     resetVariable();
                     fireInventoryUpdated();
                     int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
@@ -542,11 +558,6 @@ public class InventoryWardEdit extends ModalJFrame {
             }
 	        int reset = MessageDialog.yesNo(null, "angal.inventory.doyoureallywanttovalidatethisinventory.msg");
 			if (reset == JOptionPane.YES_OPTION) {
-				String destinationCode = inventory.getDestination();
-                if (destinationCode == null || destinationCode.isEmpty()) {
-                    MessageDialog.error(null, "angal.inventory.choosedestinationbeforevalidation.msg");
-                    return;
-                }
                 // validate inventory
                 String status = InventoryStatus.validated.toString();
                 try {
@@ -1087,7 +1098,7 @@ public class InventoryWardEdit extends ModalJFrame {
     }
 
     private void addInventoryRow(String code) throws OHServiceException {
-        List<MedicalInventoryRow> inventoryRowsList;
+        List<MedicalInventoryRow> inventoryRowsList = new ArrayList<>();
         List<MedicalWard> medicalWardList = new ArrayList<>();
         Medical medical;
         if (wardId.isEmpty()) {
@@ -1108,7 +1119,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 if (!found) {
                     medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false);
                 } else {
-                    MessageDialog.info(null, "angal.inventory.medicalalreadyexistinlist.msg");
+                    MessageDialog.info(null, "angal.inventory.medicalalreadyexistinlist.msg", medical.getDescription());
                 }
             }
         }
