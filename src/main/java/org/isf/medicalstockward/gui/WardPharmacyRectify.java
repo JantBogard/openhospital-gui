@@ -162,7 +162,7 @@ public class WardPharmacyRectify extends JDialog {
 		super(owner, true);
 		selectedWard = ward;
 		try {
-			wardDrugs = movWardBrowserManager.getMedicalsWard(selectedWard.getCode().charAt(0), false);
+			wardDrugs = movWardBrowserManager.getMedicalsWard(selectedWard.getCode(), false);
 		} catch (OHServiceException e) {
 			OHServiceExceptionUtil.showMessages(e);
 		}
@@ -184,7 +184,7 @@ public class WardPharmacyRectify extends JDialog {
 		super(owner, true);
 		selectedWard = ward;
 		try {
-			wardDrugs = movWardBrowserManager.getMedicalsWard(selectedWard.getCode().charAt(0), false);
+			wardDrugs = movWardBrowserManager.getMedicalsWard(selectedWard.getCode(), false);
 		} catch (OHServiceException e) {
 			OHServiceExceptionUtil.showMessages(e);
 		}
@@ -376,7 +376,7 @@ public class WardPharmacyRectify extends JDialog {
 			double movQuantity = lotQty - newQty;
 
 			if (movQuantity == 0. || newQty < 0) {
-				JOptionPane.showMessageDialog(this, MessageBundle.getMessage("angal.medicalstockward.rectify.pleaseinsertavalidvalue"));
+				MessageDialog.error(this, "angal.medicalstockward.rectify.pleaseinsertavalidvalue");
 				return;
 			}
 			if (newQty == 0.) {
