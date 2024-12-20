@@ -496,41 +496,46 @@ public class InventoryWardEdit extends ModalJFrame {
                     }
                 } else if (mode.equals("update")) {
                     String lastReference = inventory.getInventoryReference();
+                    LocalDateTime lastDateInventory = inventory.getInventoryDate();
                     newReference = referenceTextField.getText().trim();
                     MedicalInventory existingInventory =  medicalInventoryManager.getInventoryByReference(newReference);
                     if (existingInventory != null && !Objects.equals(existingInventory.getId(), inventory.getId())) {
                         MessageDialog.error(null, "angal.inventory.referencealreadyused.msg");
                         return;
                     }
+                    if (!inventory.getInventoryDate().equals(dateInventory)) {
+                        inventory.setInventoryDate(dateInventory);
+                    }
+                    if (!inventory.getUser().equals(user)) {
+                        inventory.setUser(user);
+                    }
+                    if (!newReference.equals(lastReference)) {
+                        inventory.setInventoryReference(newReference);
+                    }
+                    if(inventory.getStatus().equals(InventoryStatus.validated.toString())) {
+                        inventory.setStatus(InventoryStatus.draft.toString());
+                    }
                     if (inventoryRowListAdded.isEmpty() && lotsSaved.isEmpty() && lotsDeleted.isEmpty()) {
-                        if (!newReference.equals(lastReference) || !inventory.getInventoryDate().equals(dateInventory)) {
-                            if (!inventory.getInventoryDate().equals(dateInventory)) {
-                                inventory.setInventoryDate(dateInventory);
-                            }
-                            if (!inventory.getUser().equals(user)) {
-                                inventory.setUser(user);
-                            }
-                            if (!newReference.equals(lastReference)) {
-                                inventory.setInventoryReference(newReference);
-                            }
-                            if(inventory.getStatus().equals(InventoryStatus.validated.toString())) {
-                                inventory.setStatus(InventoryStatus.draft.toString());
-                            }
+                        if (!newReference.equals(lastReference) || !lastDateInventory.equals(dateInventory)) {
+                            if (MessageDialog.yesNo(null,
+                            "angal.inventory.doyouwanttoupdatethisinventory.msg") == JOptionPane.YES_OPTION) {
 
-                            inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
-                            if (inventory != null) {
-                                MessageDialog.info(null, "angal.inventory.update.success.msg");
-                                statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
-                                statusLabel.setForeground(Color.GRAY);
-                                resetVariable();
-                                fireInventoryUpdated();
-                                int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
-                                if (info != JOptionPane.YES_OPTION) {
-                                    dispose();
+                                inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
+                                if (inventory != null) {
+                                    MessageDialog.info(null, "angal.inventory.update.success.msg");
+                                    statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
+                                    statusLabel.setForeground(Color.GRAY);
+                                    resetVariable();
+                                    fireInventoryUpdated();
+                                    int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
+                                    if (info != JOptionPane.YES_OPTION) {
+                                        dispose();
+                                    }
+                                } else {
+                                    MessageDialog.error(null, "angal.inventory.update.error.msg");
+                                    return;
                                 }
-                            } else {
-                                MessageDialog.error(null, "angal.inventory.update.error.msg");
-                                return;
+
                             }
                         } else {
                             if (!inventoryRowsToDelete.isEmpty()) {
@@ -550,31 +555,42 @@ public class InventoryWardEdit extends ModalJFrame {
                         }
                         return;
                     }
-                    if (!inventory.getInventoryDate().equals(dateInventory)) {
-                        inventory.setInventoryDate(dateInventory);
-                    }
-                    if (!inventory.getUser().equals(user)) {
-                        inventory.setUser(user);
-                    }
-                    if (!lastReference.equals(newReference)) {
-                        inventory.setInventoryReference(newReference);
-                    }
-                    if(inventory.getStatus().equals(InventoryStatus.validated.toString())) {
-                        inventory.setStatus(InventoryStatus.draft.toString());
-                    }
 
-                    inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
+                    if (MessageDialog.yesNo(null, "angal.inventory.doyouwanttoupdatethisinventory.msg") == JOptionPane.YES_OPTION) {
 
-                    for (MedicalInventoryRow medicalInventoryRow : inventoryRowSearchList) {
-                        medicalInventoryRow.setInventory(inventory);
-                        int id = medicalInventoryRow.getId();
-                        if (id == 0) {
-                            medicalInventoryRowManager.newMedicalInventoryRow(medicalInventoryRow);
-                        } else {
-                            double reatQty = medicalInventoryRow.getRealQty();
-                            medicalInventoryRow = medicalInventoryRowManager.getMedicalInventoryRowById(id);
-                            medicalInventoryRow.setRealqty(reatQty);
-                            medicalInventoryRowManager.updateMedicalInventoryRow(medicalInventoryRow);
+                        inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
+
+                        for (MedicalInventoryRow medicalInventoryRow : inventoryRowSearchList) {
+                            Medical medical = medicalInventoryRow.getMedical();
+                            Lot lot = medicalInventoryRow.getLot();
+                            if (lot != null) {
+                                Lot lotExist = movStockInsertingManager.getLot(lot.getCode());
+                                if (lotExist != null) {
+                                    lot.setMedical(medical);
+                                    lot = movStockInsertingManager.updateLot(lot);
+                                    medicalInventoryRow.setLot(lot);
+                                } else {
+                                    MedicalInventoryRow inventoryRow = medicalInventoryRowManager.getMedicalInventoryRowById(medicalInventoryRow.getId());
+                                    if (inventoryRow != null && inventoryRow.getLock() != medicalInventoryRow.getLock()) {
+                                        Lot newLot = movStockInsertingManager.storeLot(lot.getCode(), lot, medical);
+                                        inventoryRow.setLot(newLot);
+                                        inventoryRow.setNewLot(true);
+                                        inventoryRow.setRealqty(medicalInventoryRow.getRealQty());
+                                        medicalInventoryRow = inventoryRow;
+                                    } else {
+                                        Lot newLot = movStockInsertingManager.storeLot(lot.getCode(), lot, medical);
+                                        medicalInventoryRow.setLot(newLot);
+                                        medicalInventoryRow.setNewLot(true);
+                                    }
+                                }
+                            }
+
+                            medicalInventoryRow.setInventory(inventory);
+                            if (medicalInventoryRow.getId() == 0) {
+                                medicalInventoryRowManager.newMedicalInventoryRow(medicalInventoryRow);
+                            } else {
+                                medicalInventoryRowManager.updateMedicalInventoryRow(medicalInventoryRow);
+                            }
                         }
                     }
                     MessageDialog.info(null, "angal.inventory.update.success.msg");
@@ -1003,12 +1019,10 @@ public class InventoryWardEdit extends ModalJFrame {
                 } else if (c == 3) {
                     return medInvtRow.getLot() == null || medInvtRow.isNewLot() ? "N" : "";
                 } else if (c == 4) {
-                    return medInvtRow.getLot() == null ? "" : medInvtRow.getLot().getCode();
+                    return medInvtRow.getLot() == null ? "" : (medInvtRow.getLot().getCode().equals("") ? "AUTO" : medInvtRow.getLot().getCode());
                 } else if (c == 5) {
-                    if (medInvtRow.getLot() != null) {
-                        if (medInvtRow.getLot().getDueDate() != null) {
-                            return medInvtRow.getLot().getDueDate().format(DATE_TIME_FORMATTER);
-                        }
+                    if (medInvtRow.getLot() != null && medInvtRow.getLot().getDueDate() != null) {
+                        return medInvtRow.getLot().getDueDate().format(DATE_TIME_FORMATTER);
                     }
                     return "";
                 } else if (c == 6) {
@@ -1017,17 +1031,13 @@ public class InventoryWardEdit extends ModalJFrame {
                     double dblValue = medInvtRow.getRealQty();
                     return (int) dblValue;
                 } else if (c == 8) {
-                    if (medInvtRow.getLot() != null) {
-                        if (medInvtRow.getLot().getCost() != null) {
-                            return medInvtRow.getLot().getCost();
-                        }
+                    if (medInvtRow.getLot() != null && medInvtRow.getLot().getCost() != null) {
+                        return medInvtRow.getLot().getCost();
                     }
                     return 0.0;
                 } else if (c == 9) {
-                    if (medInvtRow.getLot() != null) {
-                        if (medInvtRow.getLot().getCost() != null) {
-                            return medInvtRow.getRealQty() * medInvtRow.getLot().getCost().doubleValue();
-                        }
+                    if (medInvtRow.getLot() != null && medInvtRow.getLot().getCost() != null) {
+                        return medInvtRow.getRealQty() * medInvtRow.getLot().getCost().doubleValue();
                     }
                     return 0.0;
                 }
@@ -1380,7 +1390,6 @@ public class InventoryWardEdit extends ModalJFrame {
             referenceTextField.setColumns(10);
             if (inventory != null && !mode.equals("new")) {
                 referenceTextField.setText(inventory.getInventoryReference());
-                referenceTextField.setEnabled(false);
             }
         }
         return referenceTextField;
