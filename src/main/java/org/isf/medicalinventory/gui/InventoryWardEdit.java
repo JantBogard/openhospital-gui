@@ -516,7 +516,7 @@ public class InventoryWardEdit extends ModalJFrame {
                         inventory.setStatus(InventoryStatus.draft.toString());
                     }
                     if (inventoryRowListAdded.isEmpty() && lotsSaved.isEmpty() && lotsDeleted.isEmpty()) {
-                        if (!newReference.equals(lastReference) || !lastDateInventory.equals(dateInventory)) {
+                        if (checkParameters(lastReference, lastDateInventory)) {
                             if (MessageDialog.yesNo(null,
                             "angal.inventory.doyouwanttoupdatethisinventory.msg") == JOptionPane.YES_OPTION) {
 
@@ -536,6 +536,8 @@ public class InventoryWardEdit extends ModalJFrame {
                                     return;
                                 }
 
+                            } else {
+                                return;
                             }
                         } else {
                             if (!inventoryRowsToDelete.isEmpty()) {
@@ -592,6 +594,8 @@ public class InventoryWardEdit extends ModalJFrame {
                                 medicalInventoryRowManager.updateMedicalInventoryRow(medicalInventoryRow);
                             }
                         }
+                    } else {
+                        return;
                     }
                     MessageDialog.info(null, "angal.inventory.update.success.msg");
                     statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
@@ -622,8 +626,15 @@ public class InventoryWardEdit extends ModalJFrame {
             }
 	        int reset = MessageDialog.yesNo(null, "angal.inventory.doyoureallywanttovalidatethisinventory.msg");
 			if (reset == JOptionPane.YES_OPTION) {
-                if (!lotsSaved.isEmpty() || !inventoryRowListAdded.isEmpty() || !inventoryRowsToDelete.isEmpty()) {
+                newReference = referenceTextField.getText().trim();
+                String lastReference = inventory.getInventoryReference();
+                LocalDateTime lastDate = inventory.getInventoryDate();
+                if (checkParameters(lastReference, lastDate)) {
                     saveButton.doClick();
+                }
+                if (!inventoryRowSearchList.stream().filter(i -> i.getLot() == null).toList().isEmpty()) {
+                    MessageDialog.error(null, "angal.inventory.youcannotvalidatethisinventory.msg");
+                    return;
                 }
                 // validate inventory
                 String status = InventoryStatus.validated.toString();
@@ -653,7 +664,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     } else {
 						try {
                             inventory.setStatus(InventoryStatus.draft.toString());
-                            statusLabel.setText(InventoryStatus.draft.toString());
+                            statusLabel.setText(InventoryStatus.draft.toString().toUpperCase());
                             statusLabel.setForeground(Color.GRAY);
                             inventory = medicalInventoryManager.updateMedicalInventory(inventory, true);
                             fireInventoryUpdated();
@@ -857,7 +868,7 @@ public class InventoryWardEdit extends ModalJFrame {
                 lastDate = inventory.getInventoryDate();
             }
 
-            if (!inventoryRowsToDelete.isEmpty() || !newReference.equals(lastReference) || !lastDate.toLocalDate().equals(dateInventory.toLocalDate())) {
+            if (checkParameters(lastReference, lastDate)) {
                 int reset = MessageDialog.yesNoCancel(null, "angal.inventory.doyouwanttosavethechanges.msg");
                 if (reset == JOptionPane.YES_OPTION) {
                     this.saveButton.doClick();
@@ -1679,4 +1690,9 @@ public class InventoryWardEdit extends ModalJFrame {
         } while (lot == null);
         return lot;
     }
+
+    private boolean checkParameters(String reference, LocalDateTime date) {
+		return !lotsSaved.isEmpty() || !inventoryRowListAdded.isEmpty() || !lotsDeleted.isEmpty() || !inventoryRowsToDelete.isEmpty()
+            || (reference != null && !reference.equals(newReference)) || !date.toLocalDate().equals(dateInventory.toLocalDate());
+	}
 }
