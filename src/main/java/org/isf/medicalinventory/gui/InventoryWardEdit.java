@@ -629,6 +629,10 @@ public class InventoryWardEdit extends ModalJFrame {
                     MessageDialog.error(null, "angal.inventory.youcannotvalidatethisinventory.msg");
                     return;
                 }
+                if (!inventoryRowSearchList.stream().filter(i -> i.isNewLot() && i.getRealQty() == 0).toList().isEmpty()) {
+                    MessageDialog.error(null, "angal.inventory.youcannotvalidatetheinventorylotrealqtyzero.msg");
+                    return;
+                }
                 // validate inventory
                 String status = InventoryStatus.validated.toString();
                 try {
