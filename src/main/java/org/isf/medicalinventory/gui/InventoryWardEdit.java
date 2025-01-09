@@ -1284,7 +1284,10 @@ public class InventoryWardEdit extends ModalJFrame {
                 medical = chooseMedical(code);
             }
         }
-        medicalWardList = medical != null ? movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false) : new ArrayList<>();
+        if (medical == null) {
+            return;
+        }
+        medicalWardList = movWardBrowserManager.getMedicalsWard(wardId, medical.getCode(), false);
         if (!medicalWardList.isEmpty()) {
             boolean found = false;
             for (MedicalInventoryRow row : inventoryRowSearchList) {
