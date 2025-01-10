@@ -55,7 +55,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -65,6 +64,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.ListSelectionEvent;
@@ -226,7 +226,7 @@ public class InventoryWardEdit extends ModalJFrame {
     }
 
     private void initComponents() {
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new DimensionUIResource(950, 580));
         setLocationRelativeTo(null); // center
         if (mode.equals("update")) {
@@ -246,7 +246,7 @@ public class InventoryWardEdit extends ModalJFrame {
         panelFooter = getPanelFooter();
         getContentPane().add(panelFooter, BorderLayout.SOUTH);
 
-        addWindowFocusListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 closeButton.doClick();
@@ -873,8 +873,6 @@ public class InventoryWardEdit extends ModalJFrame {
                 if (reset == JOptionPane.NO_OPTION) {
                     resetVariable();
                     dispose();
-                } else {
-                    resetVariable();
                 }
             } else {
                 resetVariable();
