@@ -491,10 +491,6 @@ public class InventoryWardEdit extends ModalJFrame {
                     MessageDialog.info(this, "angal.inventory.savesuccess.msg");
                     fireInventoryInserted();
                     resetVariable();
-                    int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
-                    if (info != JOptionPane.YES_OPTION) {
-                        dispose();
-                    }
                 } else if (mode.equals("update") && MessageDialog.yesNo(null, "angal.inventory.doyouwanttoupdatethisinventory.msg") == JOptionPane.YES_OPTION) {
                     String lastReference = inventory.getInventoryReference();
                     LocalDateTime lastDateInventory = inventory.getInventoryDate();
@@ -525,10 +521,6 @@ public class InventoryWardEdit extends ModalJFrame {
                                 statusLabel.setForeground(Color.GRAY);
                                 resetVariable();
                                 fireInventoryUpdated();
-                                int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
-                                if (info != JOptionPane.YES_OPTION) {
-                                    dispose();
-                                }
                             } else {
                                 MessageDialog.error(null, "angal.inventory.update.error.msg");
                                 return;
@@ -540,10 +532,6 @@ public class InventoryWardEdit extends ModalJFrame {
                                 statusLabel.setForeground(Color.GRAY);
                                 resetVariable();
                                 fireInventoryUpdated();
-                                int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
-                                if (info != JOptionPane.YES_OPTION) {
-                                    dispose();
-                                }
                             } else {
                                 MessageDialog.info(null, "angal.inventory.inventoryisalreadysaved.msg");
                                 return;
@@ -590,10 +578,6 @@ public class InventoryWardEdit extends ModalJFrame {
                     statusLabel.setForeground(Color.GRAY);
                     resetVariable();
                     fireInventoryUpdated();
-                    int info = MessageDialog.yesNo(null, "angal.inventory.doyouwanttocontinueediting.msg");
-                    if (info != JOptionPane.YES_OPTION) {
-                        dispose();
-                    }
                 }
                 if (!newMedicalInventoryRows.isEmpty()) {
                     inventoryRowSearchList = newMedicalInventoryRows;
