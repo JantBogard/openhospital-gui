@@ -1,6 +1,6 @@
 /*
  * Open Hospital (www.open-hospital.org)
- * Copyright © 2006-2023 Informatici Senza Frontiere (info@informaticisenzafrontiere.org)
+ * Copyright © 2006-2024 Informatici Senza Frontiere (info@informaticisenzafrontiere.org)
  *
  * Open Hospital is a free and open source software for healthcare data management.
  *
@@ -21,24 +21,28 @@
  */
 package org.isf.medicalinventory.gui;
 
+import static org.isf.utils.Constants.DATE_TIME_FORMATTER;
+
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -48,11 +52,20 @@ import javax.swing.table.DefaultTableModel;
 
 import org.isf.generaldata.MessageBundle;
 import org.isf.medicalinventory.gui.InventoryWardEdit.InventoryListener;
+import org.isf.medicalinventory.manager.MedicalInventoryManager;
+import org.isf.medicalinventory.model.InventoryStatus;
+import org.isf.medicalinventory.model.InventoryType;
 import org.isf.medicalinventory.model.MedicalInventory;
+import org.isf.menu.manager.Context;
+import org.isf.utils.exception.OHServiceException;
+import org.isf.utils.exception.gui.OHServiceExceptionUtil;
 import org.isf.utils.jobjects.GoodDateChooser;
-import org.isf.utils.jobjects.InventoryState;
+import org.isf.utils.jobjects.MessageDialog;
 import org.isf.utils.jobjects.ModalJFrame;
 import org.isf.utils.time.TimeTools;
+import org.isf.ward.manager.WardBrowserManager;
+import org.isf.ward.model.Ward;
+import org.springframework.data.domain.Page;
 
 public class InventoryWardBrowser extends ModalJFrame implements InventoryListener {
 
@@ -69,7 +82,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JPanel panelContent;
     private JButton closeButton;
     private JButton newButton;
-    private JButton updateButton;
+    private JButton editButton;
     private JButton deleteButton;
     private JButton viewButton;
     private JScrollPane scrollPaneInventory;
@@ -78,12 +91,21 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             MessageBundle.getMessage("angal.inventory.referenceshow.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.ward.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.date.col").toUpperCase(),
-            MessageBundle.getMessage("angal.inventory.state.col").toUpperCase(),
+            MessageBundle.getMessage("angal.inventory.status.col").toUpperCase(),
             MessageBundle.getMessage("angal.common.user.col").toUpperCase()
     };
     private int[] pColumwidth = { 150, 150, 100, 100, 150 };
-    private JComboBox<Object> stateComboBox;
-    private JLabel stateLabel;
+    private JComboBox<String> statusComboBox;
+    private JLabel statusLabel;
+    JButton next;
+    JButton previous;
+    JComboBox<Integer> pagesCombo = new JComboBox<>();
+    JLabel under = new JLabel("/ 0 " + MessageBundle.getMessage("angal.inventory.page.text"));
+    private static int PAGE_SIZE = 50;
+    private int startIndex;
+    private int totalRows;
+    private MedicalInventoryManager medicalInventoryManager = Context.getApplicationContext().getBean(MedicalInventoryManager.class);
+    private WardBrowserManager wardBrowserManager = Context.getApplicationContext().getBean(WardBrowserManager.class);
     private List<MedicalInventory> inventoryList;
 
     public InventoryWardBrowser() {
@@ -106,16 +128,54 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
         panelFooter = getPanelFooter();
         getContentPane().add(panelFooter, BorderLayout.SOUTH);
 
-        for (int i = 0; i < pColumwidth.length; i++) {
-            jTableInventory.getColumnModel().getColumn(i).setMinWidth(pColumwidth[i]);
-        }
+        ajustWidth();
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 dispose();
             }
         });
-        // pack();
+		pagesCombo.setEditable(true);
+		previous.setEnabled(false);
+		next.setEnabled(false);
+		next.addActionListener(actionEvent -> {
+		    if (!previous.isEnabled()) {
+				previous.setEnabled(true);
+		    }
+		    startIndex += PAGE_SIZE;
+		    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+		    if (startIndex + PAGE_SIZE > totalRows) {
+				next.setEnabled(false);
+		    }
+		    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+		});
+
+    	previous.addActionListener(actionEvent -> {
+		    if (!next.isEnabled()) {
+				next.setEnabled(true);
+		    }
+		    startIndex -= PAGE_SIZE;
+		    jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+		    if (startIndex < PAGE_SIZE) {
+				previous.setEnabled(false);
+		    }
+		    pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+		});
+		pagesCombo.addItemListener(itemEvent -> {
+		    int eventID = itemEvent.getStateChange();
+
+		    if (eventID == ItemEvent.SELECTED) {
+				int page_number = (Integer) pagesCombo.getSelectedItem();
+				startIndex = (page_number - 1) * PAGE_SIZE;
+
+				next.setEnabled(startIndex + PAGE_SIZE <= totalRows);
+				previous.setEnabled(page_number != 1);
+				pagesCombo.setSelectedItem(startIndex / PAGE_SIZE + 1);
+				jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+
+				pagesCombo.setEnabled(true);
+		    }
+		});
     }
 
     private JPanel getPanelHeader() {
@@ -152,12 +212,12 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             gbc_jCalendarTo.gridx = 3;
             gbc_jCalendarTo.gridy = 0;
             panelHeader.add(getJCalendarTo(), gbc_jCalendarTo);
-            GridBagConstraints gbc_stateLabel = new GridBagConstraints();
-            gbc_stateLabel.fill = GridBagConstraints.HORIZONTAL;
-            gbc_stateLabel.insets = new Insets(0, 0, 0, 5);
-            gbc_stateLabel.gridx = 4;
-            gbc_stateLabel.gridy = 0;
-            panelHeader.add(getStateLabel(), gbc_stateLabel);
+            GridBagConstraints gbc_statusLabel = new GridBagConstraints();
+            gbc_statusLabel.fill = GridBagConstraints.HORIZONTAL;
+            gbc_statusLabel.insets = new Insets(0, 0, 0, 5);
+            gbc_statusLabel.gridx = 4;
+            gbc_statusLabel.gridy = 0;
+            panelHeader.add(getStatusLabel(), gbc_statusLabel);
             GridBagConstraints gbc_comboBox = new GridBagConstraints();
             gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
             gbc_comboBox.gridx = 5;
@@ -188,9 +248,19 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JPanel getPanelFooter() {
         if (panelFooter == null) {
             panelFooter = new JPanel();
+			next = new JButton(MessageBundle.getMessage("angal.inventory.nextarrow.btn"));
+			next.setMnemonic(KeyEvent.VK_RIGHT);
+			previous = new JButton(MessageBundle.getMessage("angal.inventory.previousarrow.btn"));
+			next.setMnemonic(KeyEvent.VK_LEFT);
+
+            panelFooter.add(previous);
+			panelFooter.add(pagesCombo);
+			panelFooter.add(under);
+			panelFooter.add(next);
+
             panelFooter.add(getNewButton());
             panelFooter.add(getViewButton());
-            panelFooter.add(getUpdateButton());
+            panelFooter.add(getEditButton());
             panelFooter.add(getDeleteButton());
             panelFooter.add(getCloseButton());
         }
@@ -198,40 +268,44 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     }
 
     private GoodDateChooser getJCalendarFrom() {
-        if (jCalendarFrom == null) {
-            jCalendarFrom = new GoodDateChooser(dateFrom.toLocalDate());
-            jCalendarFrom.addDateChangeListener(dateChangeEvent -> {
-                LocalDate newDate = dateChangeEvent.getNewDate();
-                if (newDate != null) {
-                    dateFrom = newDate.atStartOfDay();
-                    InventoryBrowsingModel inventoryModel = new InventoryBrowsingModel();
-                }
-            });
-            jCalendarFrom.setEnabled(false);
-        }
-        return jCalendarFrom;
+		if (jCalendarFrom == null) {
+			jCalendarFrom = new GoodDateChooser(LocalDate.now(), false, false);
+			jCalendarFrom.addDateChangeListener(event -> {
+				dateFrom = jCalendarFrom.getDateStartOfDay();
+				InventoryBrowsingModel inventoryModel = new InventoryBrowsingModel();
+				totalRows = inventoryModel.getRowCount();
+				startIndex = 0;
+				previous.setEnabled(false);
+				next.setEnabled(totalRows > PAGE_SIZE);
+				jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+				initialiseCombo(totalRows);
+			});
+		}
+		return jCalendarFrom;
     }
 
     private GoodDateChooser getJCalendarTo() {
-        if (jCalendarTo == null) {
-            jCalendarTo = new GoodDateChooser(dateTo.toLocalDate(), false);
-            jCalendarTo.addDateChangeListener(dateChangeEvent -> {
-                LocalDate newDate = dateChangeEvent.getNewDate();
-                if (newDate != null) {
-                    dateTo = newDate.atStartOfDay();
-                    InventoryBrowsingModel inventoryModel = new InventoryBrowsingModel();
-                }
-            });
-            jCalendarTo.setEnabled(false);
-        }
-        return jCalendarTo;
+		if (jCalendarTo == null) {
+			jCalendarTo = new GoodDateChooser(LocalDate.now(), false, false);
+			jCalendarTo.addDateChangeListener(event -> {
+				dateTo = jCalendarTo.getDateEndOfDay();
+				InventoryBrowsingModel inventoryModel = new InventoryBrowsingModel();
+				totalRows = inventoryModel.getRowCount();
+				startIndex = 0;
+				previous.setEnabled(false);
+				next.setEnabled(totalRows > PAGE_SIZE);
+				jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+				initialiseCombo(totalRows);
+			});
+		}
+		return jCalendarTo;
     }
 
     private JLabel getJLabelTo() {
         if (jLabelTo == null) {
             jLabelTo = new JLabel();
             jLabelTo.setHorizontalAlignment(SwingConstants.RIGHT);
-            jLabelTo.setText(MessageBundle.getMessage("angal.common.dateto.label")); //$NON-NLS-1$
+            jLabelTo.setText(MessageBundle.getMessage("angal.common.dateto.label"));
         }
         return jLabelTo;
     }
@@ -240,7 +314,7 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
         if (jLabelFrom == null) {
             jLabelFrom = new JLabel();
             jLabelFrom.setHorizontalAlignment(SwingConstants.RIGHT);
-            jLabelFrom.setText(MessageBundle.getMessage("angal.common.datefrom.label")); //$NON-NLS-1$
+            jLabelFrom.setText(MessageBundle.getMessage("angal.common.datefrom.label"));
         }
         return jLabelFrom;
     }
@@ -248,42 +322,102 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
     private JButton getNewButton() {
         newButton = new JButton(MessageBundle.getMessage("angal.common.new.btn"));
         newButton.setMnemonic(MessageBundle.getMnemonic("angal.common.new.btn.key"));
-        newButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                InventoryWardEdit inventoryWardEdit = new InventoryWardEdit();
-                InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
-                inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
-            }
+        newButton.addActionListener(actionEvent -> {
+	        InventoryWardEdit inventoryWardEdit = new InventoryWardEdit();
+	        InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
+	        inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
         });
         return newButton;
+    }
+
+    private JButton getEditButton() {
+		editButton = new JButton(MessageBundle.getMessage("angal.common.edit.btn"));
+		editButton.setMnemonic(MessageBundle.getMnemonic("angal.common.edit.btn.key"));
+		editButton.setEnabled(false);
+		editButton.addActionListener(actionEvent -> {
+			MedicalInventory inventory;
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
+			}
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			inventory = inventoryList.get(selectedRow);
+			if (inventory.getStatus().equals(InventoryStatus.canceled.toString())) {
+				MessageDialog.error(this, "angal.inventory.cancelednoteditable.msg");
+				return;
+			}
+			InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "update");
+			InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
+			inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
+		});
+		return editButton;
     }
 
     private JButton getViewButton() {
         viewButton = new JButton(MessageBundle.getMessage("angal.inventory.view.btn"));
         viewButton.setMnemonic(MessageBundle.getMnemonic("angal.inventory.view.btn.key"));
+		viewButton.setEnabled(false);
+		viewButton.addActionListener(actionEvent -> {
+			MedicalInventory inventory;
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
+			}
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			inventory = inventoryList.get(selectedRow);
+			InventoryWardEdit inventoryWardEdit = new InventoryWardEdit(inventory, "view");
+			InventoryWardEdit.addInventoryListener(InventoryWardBrowser.this);
+			inventoryWardEdit.showAsModal(InventoryWardBrowser.this);
+		});
         return viewButton;
-    }
-
-    private JButton getUpdateButton() {
-        updateButton = new JButton(MessageBundle.getMessage("angal.common.update.btn"));
-        updateButton.setMnemonic(MessageBundle.getMnemonic("angal.common.update.btn.key"));
-        return updateButton;
     }
 
     private JButton getDeleteButton() {
         deleteButton = new JButton(MessageBundle.getMessage("angal.common.delete.btn"));
         deleteButton.setMnemonic(MessageBundle.getMnemonic("angal.common.delete.btn.key"));
+		deleteButton.setEnabled(false);
+		deleteButton.addActionListener(actionEvent -> {
+			if (jTableInventory.getSelectedRowCount() > 1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectonlyoneinventory.msg");
+				return;
+			}
+			int selectedRow = jTableInventory.getSelectedRow();
+			if (selectedRow == -1) {
+				MessageDialog.error(this, "angal.inventory.pleaseselectinventory.msg");
+				return;
+			}
+			MedicalInventory inventory = inventoryList.get(selectedRow);
+			String currentStatus = inventory.getStatus();
+			if (currentStatus.equalsIgnoreCase(InventoryStatus.validated.toString()) || currentStatus.equalsIgnoreCase(InventoryStatus.draft.toString())) {
+				int response = MessageDialog.yesNo(this, "angal.inventory.deletion.confirm.msg");
+				if (response == JOptionPane.YES_OPTION) {
+					try {
+						medicalInventoryManager.deleteInventory(inventory);
+						MessageDialog.info(this, "angal.inventory.deletion.success.msg");
+						jTableInventory.setModel(new InventoryBrowsingModel());
+					} catch (OHServiceException e) {
+						MessageDialog.error(this, "angal.inventory.deletion.error.msg");
+					}
+				}
+			} else {
+				MessageDialog.error(this, "angal.inventory.deletion.error.msg");
+			}
+		});
         return deleteButton;
     }
 
     private JButton getCloseButton() {
         closeButton = new JButton(MessageBundle.getMessage("angal.common.close.btn"));
         closeButton.setMnemonic(MessageBundle.getMnemonic("angal.common.close.btn.key"));
-        closeButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
+        closeButton.addActionListener(actionEvent -> dispose());
         return closeButton;
     }
 
@@ -300,6 +434,20 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             jTableInventory = new JTable();
             jTableInventory.setFillsViewportHeight(true);
             jTableInventory.setModel(new InventoryBrowsingModel());
+			jTableInventory.getSelectionModel().addListSelectionListener(e -> {
+				if (e.getValueIsAdjusting()) {
+					int[] selectedRows = jTableInventory.getSelectedRows();
+					if (selectedRows.length == 1) {
+						editButton.setEnabled(true);
+						viewButton.setEnabled(true);
+						deleteButton.setEnabled(true);
+					} else {
+						editButton.setEnabled(false);
+						viewButton.setEnabled(false);
+						deleteButton.setEnabled(false);
+					}
+				}
+		    });
         }
         return jTableInventory;
     }
@@ -312,23 +460,52 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
         private static final long serialVersionUID = 1L;
 
         public InventoryBrowsingModel() {
-
+	        inventoryList = new ArrayList<>();
+	        String status = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
+	        String type = InventoryType.ward.toString();
+	        try {
+		        inventoryList = medicalInventoryManager.getMedicalInventoryByParams(dateFrom, dateTo, status, type);
+	        } catch (OHServiceException e) {
+		        OHServiceExceptionUtil.showMessages(e);
+	        }
         }
 
-        public Class<?> getColumnClass(int c) {
-            if (c == 0) {
-                return String.class;
-            } else if (c == 1) {
-                return String.class;
-            } else if (c == 2) {
-                return String.class;
-            } else if (c == 3) {
-                return String.class;
-            } else if (c == 4) {
-                return String.class;
-            }
-            return null;
-        }
+		public InventoryBrowsingModel(int startIndex, int pageSize) {
+			inventoryList = new ArrayList<>();
+			String status = statusComboBox.getSelectedIndex() > 0 ? statusComboBox.getSelectedItem().toString().toLowerCase() : null;
+			String type = InventoryType.ward.toString();
+			try {
+				Page<MedicalInventory> medInventorypage = medicalInventoryManager.getMedicalInventoryByParamsPageable(dateFrom, dateTo, status, type,
+								startIndex, pageSize);
+				inventoryList = medInventorypage.getContent();
+			} catch (OHServiceException e) {
+				OHServiceExceptionUtil.showMessages(e);
+			}
+		}
+
+		@Override
+		public Class<?> getColumnClass(int c) {
+			if (c == 0) {
+				return String.class;
+			} else if (c == 1) {
+				return String.class;
+			} else if (c == 2) {
+				return String.class;
+			} else if (c == 3) {
+				return String.class;
+			} else if (c == 4) {
+				return String.class;
+			}
+			return null;
+	    }
+
+		@Override
+		public int getRowCount() {
+			if (inventoryList == null) {
+				return 0;
+			}
+			return inventoryList.size();
+		}
 
         public String getColumnName(int c) {
             return pColums[c];
@@ -338,6 +515,32 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
             return pColums.length;
         }
 
+		@Override
+        public Object getValueAt(int r, int c) {
+            MedicalInventory medInvt = inventoryList.get(r);
+
+            if (c == -1) {
+                return medInvt;
+            } else if (c == 0) {
+                return medInvt.getInventoryReference();
+            } else if (c == 1) {
+                Ward ward = new Ward();
+                try {
+                    ward = wardBrowserManager.findWard(medInvt.getWard());
+                } catch (OHServiceException e) {
+                    OHServiceExceptionUtil.showMessages(e);
+                }
+                return ward == null ? "" : ward.getDescription();
+            } else if (c == 2) {
+                return medInvt.getInventoryDate().format(DATE_TIME_FORMATTER);
+            } else if (c == 3) {
+                return medInvt.getStatus();
+            } else if (c == 4) {
+                return medInvt.getUser();
+            }
+            return null;
+        }
+
         @Override
         public boolean isCellEditable(int arg0, int arg1) {
             return false;
@@ -345,46 +548,68 @@ public class InventoryWardBrowser extends ModalJFrame implements InventoryListen
 
     }
 
-    private JComboBox<Object> getComboBox() {
-        if (stateComboBox == null) {
-            stateComboBox = new JComboBox<Object>();
-            stateComboBox.addItem("");
-            for (InventoryState.State currentState : InventoryState.State.values()) {
-                stateComboBox.addItem(MessageBundle.getMessage(currentState.getLabel()));
+    private JComboBox<String> getComboBox() {
+        if (statusComboBox == null) {
+            statusComboBox = new JComboBox<>();
+            statusComboBox.addItem("");
+            for (InventoryStatus currentStatus : InventoryStatus.values()) {
+                statusComboBox.addItem(MessageBundle.getMessage("angal.inventory." + currentStatus));
             }
+			statusComboBox.addActionListener(actionEvent -> {
+				InventoryBrowsingModel inventoryBrowsingModel = new InventoryBrowsingModel();
+				totalRows = inventoryBrowsingModel.getRowCount();
+				startIndex = 0;
+				previous.setEnabled(false);
+				next.setEnabled(totalRows > PAGE_SIZE);
+				jTableInventory.setModel(new InventoryBrowsingModel(startIndex, PAGE_SIZE));
+				initialiseCombo(totalRows);
+			});
         }
-        return stateComboBox;
+        return statusComboBox;
     }
 
-    private JLabel getStateLabel() {
-        if (stateLabel == null) {
-            stateLabel = new JLabel(MessageBundle.getMessage("angal.inventory.state.label"));
-            stateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+    private JLabel getStatusLabel() {
+        if (statusLabel == null) {
+            statusLabel = new JLabel(MessageBundle.getMessage("angal.inventory.status.label"));
+            statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         }
-        return stateLabel;
+        return statusLabel;
+    }
+
+    private void ajustWidth() {
+		for (int i = 0; i < pColumwidth.length; i++) {
+			jTableInventory.getColumnModel().getColumn(i).setMinWidth(pColumwidth[i]);
+		}
+    }
+
+    public void initialiseCombo(int total_rows) {
+		int j = 0;
+
+		pagesCombo.removeAllItems();
+		for (int i = 0; i < total_rows / PAGE_SIZE; i++) {
+			j = i + 1;
+			pagesCombo.addItem(j);
+		}
+		if (j * PAGE_SIZE < total_rows) {
+			pagesCombo.addItem(j + 1);
+			under.setText("/" + (total_rows / PAGE_SIZE + 1 + " " + MessageBundle.getMessage("angal.inventory.pages.text")));
+		} else {
+			under.setText("/" + total_rows / PAGE_SIZE + " " + MessageBundle.getMessage("angal.inventory.pages.text"));
+		}
     }
 
     @Override
     public void InventoryInserted(AWTEvent e) {
-        if (inventoryList != null) {
-            inventoryList.clear();
-        }
         jTableInventory.setModel(new InventoryBrowsingModel());
     }
 
     @Override
     public void InventoryUpdated(AWTEvent e) {
-        if (inventoryList != null) {
-            inventoryList.clear();
-        }
         jTableInventory.setModel(new InventoryBrowsingModel());
     }
 
     @Override
     public void InventoryCancelled(AWTEvent e) {
-        if (inventoryList != null) {
-            inventoryList.clear();
-        }
         jTableInventory.setModel(new InventoryBrowsingModel());
     }
 }
