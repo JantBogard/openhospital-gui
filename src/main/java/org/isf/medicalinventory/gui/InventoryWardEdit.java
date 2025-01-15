@@ -1069,7 +1069,7 @@ public class InventoryWardEdit extends ModalJFrame {
                     invRow.setRealqty(intValue);
                     if (invRow.getLot() != null && invRow.getLot().getCost() != null) {
                         double total = invRow.getRealQty() * invRow.getLot().getCost().doubleValue();
-                        invRow.setTotal(total);
+                        invRow.setTotal(BigDecimal.valueOf(total));
                     }
                     inventoryRowListAdded.add(invRow);
                     inventoryRowSearchList.set(r, invRow);
