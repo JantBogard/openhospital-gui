@@ -89,6 +89,8 @@ import org.isf.medicalstockward.manager.MovWardBrowserManager;
 import org.isf.medicalstockward.model.MedicalWard;
 import org.isf.menu.manager.Context;
 import org.isf.menu.manager.UserBrowsingManager;
+import org.isf.stat.gui.report.GenericReportPharmaceuticalInventory;
+import org.isf.stat.manager.JasperReportsManager;
 import org.isf.utils.db.NormalizeString;
 import org.isf.utils.exception.OHServiceException;
 import org.isf.utils.exception.gui.OHServiceExceptionUtil;
@@ -213,6 +215,7 @@ public class InventoryWardEdit extends ModalJFrame {
 	private MovWardBrowserManager movWardBrowserManager = Context.getApplicationContext()
 		.getBean(MovWardBrowserManager.class);
 	private MovStockInsertingManager movStockInsertingManager = Context.getApplicationContext().getBean(MovStockInsertingManager.class);
+    private JasperReportsManager jasperReportsManager = Context.getApplicationContext().getBean(JasperReportsManager.class);
 
 	public InventoryWardEdit() {
 		mode = "new";
@@ -837,8 +840,18 @@ public class InventoryWardEdit extends ModalJFrame {
 	private JButton getPrintButton() {
 		printButton = new JButton(MessageBundle.getMessage("angal.common.print.btn"));
 		printButton.setMnemonic(MessageBundle.getMnemonic("angal.common.print.btn.key"));
-		return printButton;
-	}
+		printButton.setEnabled(true);
+
+        printButton.addActionListener(e -> {
+            int printRealQty = 0;
+            int response = MessageDialog.yesNo(this, "angal.inventory.askforrealquantityempty.msg");
+            if (response == JOptionPane.YES_OPTION) {
+                printRealQty = 1;
+            }
+            new GenericReportPharmaceuticalInventory(inventory, "InventoryWard", printRealQty);
+        });
+        return printButton;
+    }
 
 	private JButton getCloseButton() {
 		closeButton = new JButton(MessageBundle.getMessage("angal.common.close.btn"));
